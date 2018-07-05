@@ -941,3 +941,53 @@ extension AdamantChatsProvider {
 		}
 	}
 }
+
+// MARK: - Getting chatroom
+extension AdamantChatsProvider {
+    func getChatroom(for address: String, completion: @escaping (ChatsProviderChatroomResult) -> Void) {
+        self.getChatroom(for: address, name: nil, completion: completion)
+    }
+    
+    func getChatroom(for address: String, name: String?, completion: @escaping (ChatsProviderChatroomResult) -> Void) {
+        switch AdamantUtilities.validateAdamantAddress(address: address) {
+        case .valid:
+            break
+            
+        case .system, .invalid:
+            completion(.failure(.accountNotFound(String.adamantLocalized.newChat.specifyValidAddressMessage)))
+            return
+        }
+        
+        if let loggedAccount = accountService.account, loggedAccount.address == address {
+            completion(.failure(.accountNotFound(String.adamantLocalized.newChat.loggedUserAddressMessage)))
+            return
+        }
+        
+        accountsProvider.getAccount(byAddress: address) { result in
+            switch result {
+            case .success(let account):
+                DispatchQueue.main.async {
+                    if let name = name, account.name == nil {
+                        account.name = name
+                        
+                        if let chatroom = account.chatroom, chatroom.title == nil {
+                            account.chatroom?.title = name
+                        }
+                    }
+                    
+                    if let chatroom = account.chatroom {
+                        completion(.success(chatroom))
+                    } else {
+                        completion(.failure(.dependencyError(String.adamantLocalized.newChat.specifyValidAddressMessage)))
+                    }
+                }
+                
+            case .notFound, .invalidAddress, .networkError(_):
+                completion(.failure(.accountNotFound(result.localized)))
+                
+            case .serverError(let error):
+                completion(.failure(.serverError(error)))
+            }
+        }
+    }
+}

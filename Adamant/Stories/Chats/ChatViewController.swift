@@ -32,6 +32,7 @@ protocol ChatViewControllerDelegate: class {
 // MARK: -
 class ChatViewController: MessagesViewController {
 	// MARK: Dependencies
+    var accountService: AccountService!
 	var chatsProvider: ChatsProvider!
 	var dialogService: DialogService!
 	var router: Router!
@@ -205,6 +206,38 @@ class ChatViewController: MessagesViewController {
 											   completion: nil)
 		}
 	}
+    
+    func startNewChat(with address: String, name: String? = nil) {
+        self.chatsProvider.getChatroom(for: address, name: name) { (result) in
+            switch result {
+            case .success(let chatroom):
+                guard let vc = self.router.get(scene: AdamantScene.Chats.chat) as? ChatViewController else {
+                    return
+                }
+                
+                guard let account = self.accountService.account else {
+                    return
+                }
+                
+                vc.account = account
+                vc.chatroom = chatroom
+                vc.hidesBottomBarWhenPushed = true
+                
+                if let nav = self.navigationController {
+                    CATransaction.begin()
+                    CATransaction.setCompletionBlock({
+                        nav.pushViewController(vc, animated: true)
+                    })
+                    self.navigationController?.popViewController(animated: true)
+                    CATransaction.commit()
+                }
+                break
+            case .failure(let error):
+                self.dialogService.showRichError(error: error)
+                break
+            }
+        }
+    }
 }
 
 

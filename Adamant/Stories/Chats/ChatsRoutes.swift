@@ -23,6 +23,7 @@ extension AdamantScene {
 		
 		static let chat = AdamantScene(identifier: "ChatViewController", factory: { r in
 			let c = ChatViewController()
+            c.accountService = r.resolve(AccountService.self)
 			c.chatsProvider = r.resolve(ChatsProvider.self)
 			c.dialogService = r.resolve(DialogService.self)
 			c.router = r.resolve(Router.self)

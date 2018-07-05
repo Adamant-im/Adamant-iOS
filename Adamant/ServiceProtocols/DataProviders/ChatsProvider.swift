@@ -23,6 +23,11 @@ enum ChatsProviderRetryCancelResult {
 	case failure(ChatsProviderError)
 }
 
+enum ChatsProviderChatroomResult {
+    case success(Chatroom)
+    case failure(ChatsProviderError)
+}
+
 enum ChatsProviderError: Error {
 	case notLogged
 	case messageNotValid(ValidateMessageResult)
@@ -162,6 +167,10 @@ protocol ChatsProvider: DataProvider {
 	// MARK: - Getting chats and messages
 	func getChatroomsController() -> NSFetchedResultsController<Chatroom>
 	func getChatController(for chatroom: Chatroom) -> NSFetchedResultsController<ChatTransaction>
+    
+    // MARK: - Getting chatroom
+    func getChatroom(for address: String, completion: @escaping (ChatsProviderChatroomResult) -> Void)
+    func getChatroom(for address: String, name: String?, completion: @escaping (ChatsProviderChatroomResult) -> Void)
 	
 	/// Unread messages controller. Sections by chatroom.
 	func getUnreadMessagesController() -> NSFetchedResultsController<ChatTransaction>
