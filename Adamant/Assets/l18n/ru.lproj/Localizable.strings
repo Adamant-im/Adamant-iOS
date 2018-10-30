@@ -373,6 +373,33 @@
 /* Login: Create new account section */
 "LoginScene.Section.NewAccount" = "Новый аккаунт";
 
+/* Security: Multi Account section */
+"SecurityPage.Section.Accounts" = "Мульти-аккаунт";
+
+/* Security: Current Account option */
+"SecurityPage.Row.CurrentAccount" = "Текущий";
+
+/* MultiAccount: Screen Title */
+"MultiAccount.Title" = "Мульти-аккаунт";
+
+/* MultiAccount: 'Add new' button */
+"MultiAccount.AddNew" = "Добавить новый аккаунт";
+
+/* MultiAccount: 'Drop All' button */
+"MultiAccount.DropAll" = "Удалить все";
+
+/* MultiAccount: 'Passphrase' label */
+"MultiAccount.Passphrase" = "Пароль";
+
+/* MultiAccount: 'Name' field */
+"MultiAccount.Name" = "Название";
+
+/* MultiAccount: 'Add' button */
+"MultiAccount.AddButton" = "Добавить аккаунт";
+
+/* MultiAccount: 'Main' Label */
+"MultiAccount.MainAccount" = "Основной";
+
 /* New chat: Recipient address placeholder. Note that address text field always shows U letter, so you can left this line blank. */
 "NewChatScene.Address.Placeholder" = "";
 

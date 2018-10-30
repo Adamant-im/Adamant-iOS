@@ -78,6 +78,11 @@ enum AccountServiceResult {
 	case failure(AccountServiceError)
 }
 
+enum AccountSavingResult {
+    case success(account: SavedAccount, alert: (title: String, message: String)?)
+    case failure(AccountServiceError)
+}
+
 enum AccountServiceError: Error {
 	case userNotLogged
 	case invalidPassphrase
@@ -189,7 +194,16 @@ protocol AccountService: class {
 	///   - pin: pincode to login
 	///   - completion: completion handler
 	func setStayLoggedIn(pin: String, completion: @escaping (AccountServiceResult) -> Void)
-	
+    
+    
+    /// Add aditional account to currently logined
+    func addAccount(name: String, passphrase: String, completion: @escaping (AccountSavingResult) -> Void)
+    func getAccounts() -> [String : SavedAccount]
+    func getMainAccount() -> SavedAccount?
+    func getAdditionalAccounts() -> [String : SavedAccount]
+    func removeAdditionalAccounts(address: String, completion: @escaping (AccountServiceResult) -> Void)
+    func dropAdditionalAccounts()
+    func switchToAccount(address: String, completion: @escaping (AccountServiceResult) -> Void)
 	
 	/// Remove stored data
 	func dropSavedAccount()

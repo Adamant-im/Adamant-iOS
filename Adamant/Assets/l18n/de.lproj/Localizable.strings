@@ -376,6 +376,33 @@
 /* Login: Create new account section */
 "LoginScene.Section.NewAccount" = "Neues Konto";
 
+/* Security: Multi Account section */
+"SecurityPage.Section.Accounts" = "Mehrfachkonto";
+
+/* Security: Current Account option */
+"SecurityPage.Row.CurrentAccount" = "Aktuell";
+
+/* MultiAccount: Screen Title */
+"MultiAccount.Title" = "Mehrfachkonto";
+
+/* MultiAccount: 'Add new' button */
+"MultiAccount.AddNew" = "Neuen Account hinzufügen";
+
+/* MultiAccount: 'Drop All' button */
+"MultiAccount.DropAll" = "Alles entfernen";
+
+/* MultiAccount: 'Passphrase' label */
+"MultiAccount.Passphrase" = "Passphrase";
+
+/* MultiAccount: 'Name' field */
+"MultiAccount.Name" = "Kontobezeichnung";
+
+/* MultiAccount: 'Add' button */
+"MultiAccount.AddButton" = "Konto hinzufügen";
+
+/* MultiAccount: 'Main' Label */
+"MultiAccount.MainAccount" = "Wartung";
+
 /* New chat: Recipient address placeholder. Note that address text field always shows U letter, so you can left this line blank. */
 "NewChatScene.Address.Placeholder" = "";
 

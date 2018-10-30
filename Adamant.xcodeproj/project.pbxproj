@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		4411402421C8B290703B13EB /* Pods_Adamant.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C107D5CB65B4D728B9D97C0F /* Pods_Adamant.framework */; };
+		6414C190217F4BB900373FA6 /* MultiAccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6414C18F217F4BB900373FA6 /* MultiAccountViewController.swift */; };
+		6414C192217F6B4100373FA6 /* AddAccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6414C191217F6B4100373FA6 /* AddAccountViewController.swift */; };
+		6414C1952182088D00373FA6 /* AdamantAcountTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6414C1932182088D00373FA6 /* AdamantAcountTableViewCell.swift */; };
+		6414C1962182088D00373FA6 /* AdamantAcountTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6414C1942182088D00373FA6 /* AdamantAcountTableViewCell.xib */; };
 		642361BE20E3869D0061559E /* eth_l18n.strings in Resources */ = {isa = PBXBuildFile; fileRef = 642361BD20E3869D0061559E /* eth_l18n.strings */; };
 		644EC34D20EFA60900F40C73 /* AdamantApi+Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644EC34C20EFA60900F40C73 /* AdamantApi+Delegates.swift */; };
 		644EC34F20EFA77A00F40C73 /* Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644EC34E20EFA77A00F40C73 /* Delegate.swift */; };
@@ -267,6 +271,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6414C18F217F4BB900373FA6 /* MultiAccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAccountViewController.swift; sourceTree = "<group>"; };
+		6414C191217F6B4100373FA6 /* AddAccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddAccountViewController.swift; sourceTree = "<group>"; };
+		6414C1932182088D00373FA6 /* AdamantAcountTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdamantAcountTableViewCell.swift; sourceTree = "<group>"; };
+		6414C1942182088D00373FA6 /* AdamantAcountTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AdamantAcountTableViewCell.xib; sourceTree = "<group>"; };
 		642361BD20E3869D0061559E /* eth_l18n.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = eth_l18n.strings; sourceTree = "<group>"; };
 		644EC34C20EFA60900F40C73 /* AdamantApi+Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AdamantApi+Delegates.swift"; sourceTree = "<group>"; };
 		644EC34E20EFA77A00F40C73 /* Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Delegate.swift; sourceTree = "<group>"; };
@@ -943,6 +951,8 @@
 			isa = PBXGroup;
 			children = (
 				E948E03A20235E2300975D6B /* SettingsRoutes.swift */,
+				6414C18F217F4BB900373FA6 /* MultiAccountViewController.swift */,
+				6414C191217F6B4100373FA6 /* AddAccountViewController.swift */,
 				E90055F420EBF5DA00D0CB2D /* AboutViewController.swift */,
 				E90055F620EC200900D0CB2D /* SecurityViewController.swift */,
 				E90055F820ECD86800D0CB2D /* SecurityViewController+StayIn.swift */,
@@ -1043,6 +1053,8 @@
 				E9FEECAB2143CEED007DD7C8 /* TransferMessageSizeCalculator.swift */,
 				E9B4E1A7210F079E007E77FC /* DoubleDetailsTableViewCell.swift */,
 				E9B4E1A9210F08BE007E77FC /* DoubleDetailsTableViewCell.xib */,
+				6414C1932182088D00373FA6 /* AdamantAcountTableViewCell.swift */,
+				6414C1942182088D00373FA6 /* AdamantAcountTableViewCell.xib */,
 			);
 			path = SharedViews;
 			sourceTree = "<group>";
@@ -1189,6 +1201,7 @@
 				E9C51EED2011416E00385EB7 /* adamant-core.js in Resources */,
 				E90A4945204C6204009F6A65 /* PassphraseCell.xib in Resources */,
 				E941CCDF20E7B70200C96220 /* WalletCollectionViewCell.xib in Resources */,
+				6414C1962182088D00373FA6 /* AdamantAcountTableViewCell.xib in Resources */,
 				642361BE20E3869D0061559E /* eth_l18n.strings in Resources */,
 				E9E7CDC82003F6D200DFC4DB /* TransactionTableViewCell.xib in Resources */,
 				E926E034213EC454005E536B /* FullscreenAlertView.xib in Resources */,
@@ -1367,6 +1380,7 @@
 				E9CAE8D22018AA7700345E76 /* AdamantApi+Accounts.swift in Sources */,
 				E987024920C2B1F700E393F4 /* AdamantChatsProvider+fakeMessages.swift in Sources */,
 				E9942B84203CBFCE00C163AF /* AdamantQRTools.swift in Sources */,
+				6414C192217F6B4100373FA6 /* AddAccountViewController.swift in Sources */,
 				E9AD78812158EED300742061 /* RichMessageTransaction+CoreDataClass.swift in Sources */,
 				E94008872114F05B00CD2D67 /* AddressValidationResult.swift in Sources */,
 				E974D168215D033C003AD7E8 /* ChatCell.swift in Sources */,
@@ -1474,6 +1488,7 @@
 				E9204B5220C9762400F3B9AB /* MessageStatus.swift in Sources */,
 				E993302421369B8A00CD5200 /* RichMessage.swift in Sources */,
 				E940087B2114ED0600CD2D67 /* EthWalletService.swift in Sources */,
+				6414C190217F4BB900373FA6 /* MultiAccountViewController.swift in Sources */,
 				E948E03B20235E2300975D6B /* SettingsRoutes.swift in Sources */,
 				E9CAE8D82018ACA700345E76 /* AdamantApi+Transfers.swift in Sources */,
 				E9E7CDCC20040FDC00DFC4DB /* TransactionType.swift in Sources */,
@@ -1547,6 +1562,7 @@
 				E9240BF9215D813A00187B09 /* CustomCellDeleage.swift in Sources */,
 				E9AA8BF82129F13000F9249F /* ComplexTransferViewController.swift in Sources */,
 				E9A174B52057EDCE003667CD /* AdamantTransfersProvider+backgroundFetch.swift in Sources */,
+				6414C1952182088D00373FA6 /* AdamantAcountTableViewCell.swift in Sources */,
 				E9147B5F20500E9300145913 /* MyLittlePinpad+adamant.swift in Sources */,
 				E9981896212095CA0018C84C /* EthWalletViewController.swift in Sources */,
 				E98FC34620F9210100032D65 /* Date+adamant.swift in Sources */,

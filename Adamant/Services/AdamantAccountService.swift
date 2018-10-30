@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Lisk
 
 class AdamantAccountService: AccountService {
 	
@@ -48,6 +49,8 @@ class AdamantAccountService: AccountService {
 	private(set) var account: AdamantAccount?
 	private(set) var keypair: Keypair?
 	private var passphrase: String?
+    
+    private var mainAccount: SavedAccount?
 	
 	private func setState(_ state: AccountServiceState) {
 		stateSemaphore.wait()
@@ -122,6 +125,159 @@ extension AdamantAccountService {
 		NotificationCenter.default.post(name: Notification.Name.AdamantAccountService.stayInChanged, object: self, userInfo: [AdamantUserInfoKey.AccountService.newStayInState : true])
 		completion(.success(account: account, alert: nil))
 	}
+    
+    func addAccount(name: String, passphrase: String, completion: @escaping (AccountSavingResult) -> Void) {
+        guard AdamantUtilities.validateAdamantPassphrase(passphrase: passphrase) else {
+            completion(.failure(.invalidPassphrase))
+            return
+        }
+        
+        guard let keypair = adamantCore.createKeypairFor(passphrase: passphrase) else {
+            completion(.failure(.internalError(message: "Failed to generate keypair for passphrase", error: nil)))
+            return
+        }
+        
+        var additionalAccounts = getAdditionalAccounts()
+        let address = getAddress(from: keypair.publicKey)
+        
+        guard getMainAccount()?.address != address else {
+            completion(.failure(.internalError(message: "Already logined in this account", error: nil)))
+            return
+        }
+        let account = SavedAccount(name: name, address: address, passphrase: passphrase)
+        
+        if additionalAccounts[address] == nil {
+            additionalAccounts[address] = account
+        } else {
+            completion(.failure(.internalError(message: "Already logined in this account", error: nil)))
+            return
+        }
+        
+        do {
+            let jsonData = try JSONEncoder().encode(additionalAccounts)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                securedStore.set(jsonString, for: .additionalAccounts)
+                completion(.success(account: account, alert: nil))
+            } else {
+                print("Fail save additionl accounts to secure storege")
+                completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege", error: nil)))
+            }
+        } catch let err {
+            print("Fail save additionl accounts to secure storege with error: ", err)
+            completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege with error:", error: err)))
+        }
+    }
+    
+    func getAccounts() -> [String : SavedAccount] {
+        var accounts = [String : SavedAccount]()
+        
+        if let main = getMainAccount() {
+            accounts[main.address] = main
+        }
+        let additionalAccounts = getAdditionalAccounts()
+        accounts.merge(additionalAccounts) { (curent, new) -> SavedAccount in curent }
+        
+        return accounts
+    }
+    
+    func getMainAccount() -> SavedAccount? {
+        if mainAccount != nil {
+            return mainAccount
+        }
+        
+        guard let passphrase = securedStore.get(Key.passphrase) else {
+            return nil
+        }
+        
+        guard AdamantUtilities.validateAdamantPassphrase(passphrase: passphrase) else {
+            return nil
+        }
+        
+        guard let keypair = adamantCore.createKeypairFor(passphrase: passphrase) else {
+            return nil
+        }
+        
+//        guard let keypair = getSavedKeypair() else {
+//            return nil
+//        }
+        
+        let address = getAddress(from: keypair.publicKey)
+        mainAccount = SavedAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: address, passphrase: passphrase)
+        return mainAccount
+    }
+    
+    func getAdditionalAccounts() -> [String : SavedAccount] {
+        if let additionalAccountsRaw = securedStore.get(Key.additionalAccounts), let data = additionalAccountsRaw.data(using: .utf8) {
+            
+            do {
+                let additionalAccounts = try JSONDecoder().decode([String: SavedAccount].self, from: data)
+                return additionalAccounts
+            } catch let err {
+                print("Fail to get additionl accounts from secure storege with error: ", err)
+                return [String : SavedAccount]()
+            }
+        } else {
+            return [String : SavedAccount]()
+        }
+    }
+    
+    func removeAdditionalAccounts(address: String, completion: @escaping (AccountServiceResult) -> Void) {
+        var additionalAccounts = getAdditionalAccounts()
+        additionalAccounts.removeValue(forKey: address)
+        
+        do {
+            let jsonData = try JSONEncoder().encode(additionalAccounts)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                securedStore.set(jsonString, for: .additionalAccounts)
+                if address == account?.address {
+                    switchToAccount(address: getMainAccount()?.address ?? "", completion: completion)
+                }
+            } else {
+                print("Fail save additionl accounts to secure storege")
+                completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege", error: nil)))
+            }
+        } catch let err {
+            print("Fail save additionl accounts to secure storege with error: ", err)
+            completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege with error:", error: err)))
+        }
+    }
+    
+    func dropAdditionalAccounts() {
+        securedStore.remove(.lastUsedAccount)
+        securedStore.remove(.additionalAccounts)
+        
+        
+        if let main = getMainAccount(), main.passphrase != passphrase {
+            switchToAccount(address: main.address) { (result) in
+                //
+            }
+        }
+    }
+    
+    func switchToAccount(address: String, completion: @escaping (AccountServiceResult) -> Void) {
+        let accounts = getAccounts()
+        if let account = accounts[address] {
+            loginWith(passphrase: account.passphrase, stayIn: true) { (result) in
+                self.securedStore.set(address, for: .lastUsedAccount)
+                completion(result)
+            }
+        }
+    }
+    
+    /// Extract Adamant address from a public key
+    func getAddress(from publicKey: String) -> String {
+        let bytes = SHA256(publicKey.hexBytes()).digest()
+        let identifier = byteIdentifier(from: bytes)
+        return "U\(identifier)"
+    }
+    
+    func byteIdentifier(from bytes: [UInt8]) -> String {
+        guard bytes.count >= 8 else { return "" }
+        let leadingBytes = bytes[0..<8].reversed()
+        let data = Data(bytes: Array(leadingBytes))
+        let value = UInt64(bigEndian: data.withUnsafeBytes { $0.pointee })
+        return "\(value)"
+    }
 	
 	func validatePin(_ pin: String) -> Bool {
 		guard let savedPin = securedStore.get(.pin) else {
@@ -155,6 +311,9 @@ extension AdamantAccountService {
 		securedStore.remove(.privateKey)
 		securedStore.remove(.useBiometry)
 		securedStore.remove(.passphrase)
+        
+        dropAdditionalAccounts()
+        
 		hasStayInAccount = false
 		NotificationCenter.default.post(name: Notification.Name.AdamantAccountService.stayInChanged, object: self, userInfo: [AdamantUserInfoKey.AccountService.newStayInState : false])
 		notificationsService.setNotificationsMode(.disabled, completion: nil)
@@ -264,7 +423,11 @@ extension AdamantAccountService {
 // MARK: - Log In
 extension AdamantAccountService {
 	// MARK: Passphrase
-	func loginWith(passphrase: String, completion: @escaping (AccountServiceResult) -> Void) {
+    func loginWith(passphrase: String, completion: @escaping (AccountServiceResult) -> Void) {
+        self.loginWith(passphrase: passphrase, stayIn: false, completion: completion)
+    }
+    
+    func loginWith(passphrase: String, stayIn: Bool, completion: @escaping (AccountServiceResult) -> Void) {
 		guard AdamantUtilities.validateAdamantPassphrase(passphrase: passphrase) else {
 			completion(.failure(.invalidPassphrase))
 			return
@@ -275,20 +438,22 @@ extension AdamantAccountService {
 			return
 		}
 		
-		loginWith(keypair: keypair) { [weak self] result in
+        loginWith(keypair: keypair, stayIn: stayIn) { [weak self] result in
 			guard case .success = result else {
 				completion(result)
 				return
 			}
 			
 			// MARK: Drop saved accs
-			if let storedPassphrase = self?.getSavedPassphrase(), storedPassphrase != passphrase {
-				self?.dropSavedAccount()
-			}
-			
-			if let storedKeypair = self?.getSavedKeypair(), storedKeypair != self?.keypair {
-				self?.dropSavedAccount()
-			}
+            if !stayIn {
+                if let storedPassphrase = self?.getSavedPassphrase(), storedPassphrase != passphrase {
+                    self?.dropSavedAccount()
+                }
+                
+                if let storedKeypair = self?.getSavedKeypair(), storedKeypair != self?.keypair {
+                    self?.dropSavedAccount()
+                }
+            }
 			
 			// Update and initiate wallet services
 			self?.passphrase = passphrase
@@ -321,6 +486,13 @@ extension AdamantAccountService {
 	// MARK: Biometry
 	func loginWithStoredAccount(completion: @escaping (AccountServiceResult) -> Void) {
 		if let passphrase = getSavedPassphrase() {
+            if let address = securedStore.get(.lastUsedAccount) {
+                let accounts = getAdditionalAccounts()
+                if let lastUsedAccount = accounts[address] {
+                    loginWith(passphrase: lastUsedAccount.passphrase, stayIn: true, completion: completion)
+                    return
+                }
+            }
 			loginWith(passphrase: passphrase, completion: completion)
 			return
 		}
@@ -345,7 +517,11 @@ extension AdamantAccountService {
 	
 	
 	// MARK: Keypair
-	private func loginWith(keypair: Keypair, completion: @escaping (AccountServiceResult) -> Void) {
+    private func loginWith(keypair: Keypair, completion: @escaping (AccountServiceResult) -> Void) {
+        self.loginWith(keypair: keypair, stayIn: false, completion: completion)
+    }
+    
+    private func loginWith(keypair: Keypair, stayIn: Bool, completion: @escaping (AccountServiceResult) -> Void) {
 		stateSemaphore.wait()
 		switch state {
 		case .isLoggingIn:
@@ -358,7 +534,7 @@ extension AdamantAccountService {
 			
 		// Logout first
 		case .loggedIn:
-			logout(lockSemaphore: false)
+            logout(lockSemaphore: false, stayIn: stayIn)
 			
 		// Go login
 		case .notLogged:
@@ -401,12 +577,14 @@ extension AdamantAccountService {
 		logout(lockSemaphore: true)
 	}
 	
-	private func logout(lockSemaphore: Bool) {
+    private func logout(lockSemaphore: Bool, stayIn: Bool = false) {
 		if account != nil {
 			NotificationCenter.default.post(name: Notification.Name.AdamantAccountService.userWillLogOut, object: self)
 		}
 		
-		dropSavedAccount()
+        if !stayIn {
+            dropSavedAccount()
+        }
 		
 		let wasLogged = account != nil
 		account = nil
@@ -434,6 +612,9 @@ extension StoreKey {
 		static let pin = "accountService.pin"
 		static let useBiometry = "accountService.useBiometry"
 		static let passphrase = "accountService.passphrase"
+        
+        static let lastUsedAccount = "accountService.lastUsedAccount"
+        static let additionalAccounts = "accountService.additionalAccounts"
 		
 		private init() {}
 	}
@@ -445,6 +626,9 @@ fileprivate enum Key {
 	case pin
 	case useBiometry
 	case passphrase
+    
+    case lastUsedAccount
+    case additionalAccounts
 	
 	var stringValue: String {
 		switch self {
@@ -453,6 +637,9 @@ fileprivate enum Key {
 		case .pin: return StoreKey.accountService.pin
 		case .useBiometry: return StoreKey.accountService.useBiometry
 		case .passphrase: return StoreKey.accountService.passphrase
+            
+        case .lastUsedAccount: return StoreKey.accountService.lastUsedAccount
+        case .additionalAccounts: return StoreKey.accountService.additionalAccounts
 		}
 	}
 }
@@ -469,4 +656,10 @@ fileprivate extension SecuredStore {
 	func remove(_ key: Key) {
 		remove(key.stringValue)
 	}
+}
+
+public struct SavedAccount: Codable, Equatable {
+    var name: String
+    var address: String
+    var passphrase: String
 }

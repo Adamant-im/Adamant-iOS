@@ -47,12 +47,14 @@ class SecurityViewController: FormViewController {
 	
 	enum Sections {
 		case security
+        case accounts
 		case notifications
 		case aboutNotificationTypes
 		
 		var tag: String {
 			switch self {
 			case .security: return "ss"
+            case .accounts: return "ac"
 			case .notifications: return "st"
 			case .aboutNotificationTypes: return "ans"
 			}
@@ -61,6 +63,7 @@ class SecurityViewController: FormViewController {
 		var localized: String {
 			switch self {
 			case .security: return NSLocalizedString("SecurityPage.Section.Security", comment: "Security: Security section")
+            case .accounts: return NSLocalizedString("SecurityPage.Section.Accounts", comment: "Security: Multi Account section")
 			case .notifications: return NSLocalizedString("SecurityPage.Section.NotificationsType", comment: "Security: Selected notifications types")
 			case .aboutNotificationTypes: return NSLocalizedString("SecurityPage.Section.AboutNotificationTypes", comment: "Security: About Notification types")
 			}
@@ -69,6 +72,7 @@ class SecurityViewController: FormViewController {
 	
 	enum Rows {
 		case generateQr, stayIn, biometry
+        case currentAccount
 		case notificationsMode
 		case description, github
 		
@@ -77,6 +81,7 @@ class SecurityViewController: FormViewController {
 			case .generateQr: return "qr"
 			case .stayIn: return "rs"
 			case .biometry: return "rb"
+            case .currentAccount: return "crntac"
 			case .notificationsMode: return "rn"
 			case .description: return "rd"
 			case .github: return "git"
@@ -88,6 +93,7 @@ class SecurityViewController: FormViewController {
 			case .generateQr: return NSLocalizedString("SecurityPage.Row.GenerateQr", comment: "Security: Generate QR with passphrase row")
 			case .stayIn: return NSLocalizedString("SecurityPage.Row.StayLoggedIn", comment: "Security: Stay logged option")
 			case .biometry: return "" // localAuth.biometryType.localized
+            case .currentAccount: return NSLocalizedString("SecurityPage.Row.CurrentAccount", comment: "Security: Current Account option")
 			case .notificationsMode: return NSLocalizedString("SecurityPage.Row.Notifications", comment: "Security: Show notifications")
 			case .description: return NSLocalizedString("SecurityPage.Row.Notifications.ModesDescription", comment: "Security: Notification modes description. Markdown supported.")
 			case .github: return NSLocalizedString("SecurityPage.Row.VisitGithub", comment: "Security: Visit Github")
@@ -188,7 +194,37 @@ class SecurityViewController: FormViewController {
 		
 		stayInSection.append(contentsOf: [qrRow, stayInRow, biometryRow])
 		form.append(stayInSection)
-		
+        
+        // Accounts section
+        let accountsSection = Section(Sections.accounts.localized) {
+            $0.tag = Sections.accounts.tag
+            
+            $0.hidden = Condition.function([], { [weak self] _ -> Bool in
+                guard let showSection = self?.showLoggedInOptions else {
+                    return true
+                }
+                
+                return !showSection
+            })
+        }
+        
+        let cuttentAccountRow = AdamantAcountRow() {
+            $0.tag = Rows.currentAccount.tag
+            $0.value = SavedAccount(name: Rows.currentAccount.localized, address: accountService.account?.address ?? "", passphrase: "")
+            }.cellSetup { (cell, _) in
+                cell.selectionStyle = .gray
+            }.cellUpdate({ (cell, _) in
+                cell.accessoryType = .disclosureIndicator
+            }).onCellSelection { [weak self] (_, row) in
+                guard let nav = self?.navigationController, let vc = self?.router.get(scene: AdamantScene.Settings.multiAccount) else {
+                    return
+                }
+                
+                nav.pushViewController(vc, animated: true)
+        }
+        
+        accountsSection.append(cuttentAccountRow)
+		form.append(accountsSection)
 		
 		// MARK: Notifications
 		// Type
@@ -310,6 +346,10 @@ class SecurityViewController: FormViewController {
 			row.value = accountService.hasStayInAccount && accountService.useBiometry
 			row.evaluateHidden()
 		}
+        
+        if let section = form.sectionBy(tag: Sections.accounts.tag) {
+            section.evaluateHidden()
+        }
 		
 		if let section = form.sectionBy(tag: Sections.notifications.tag) {
 			section.evaluateHidden()

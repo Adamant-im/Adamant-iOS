@@ -19,6 +19,22 @@ extension AdamantScene {
 			c.router = r.resolve(Router.self)
 			return c
 		}
+        
+        static let multiAccount = AdamantScene(identifier: "MultiAccountViewController") { r in
+            let c = MultiAccountViewController()
+            c.accountService = r.resolve(AccountService.self)
+            c.dialogService = r.resolve(DialogService.self)
+            c.localAuth = r.resolve(LocalAuthentication.self)
+            c.router = r.resolve(Router.self)
+            return c
+        }
+        
+        static let addAccount = AdamantScene(identifier: "AddAccountViewController", factory: { r in
+            let c = AddAccountViewController()
+            c.accountService = r.resolve(AccountService.self)
+            c.dialogService = r.resolve(DialogService.self)
+            return c
+        })
 		
 		static let qRGenerator = AdamantScene(identifier: "QRGeneratorViewController", factory: { r in
 			let c = QRGeneratorViewController()
