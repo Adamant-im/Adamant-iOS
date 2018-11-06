@@ -14,7 +14,7 @@ import QRCodeReader
 import EFQRCode
 
 protocol AccountEditorDelegate: class {
-    func accountDidAdded(_ account: SavedAccount)
+    func accountDidAdded(_ account: LocalAdamantAccount)
 }
 
 class AddAccountViewController: FormViewController {
@@ -93,7 +93,7 @@ class AddAccountViewController: FormViewController {
                 }()
             }
             
-            <<< NameRow() {
+            <<< TextRow() {
                 $0.tag = Rows.name.tag
                 $0.placeholder = Rows.name.localized
                 $0.keyboardReturnType = KeyboardReturnTypeConfiguration(nextKeyboardType: .next, defaultKeyboardType: .go)
@@ -129,7 +129,7 @@ class AddAccountViewController: FormViewController {
         DispatchQueue.global().async {
             var name = ""
             
-            if let row: NameRow = self.form.rowBy(tag: Rows.name.tag), let value = row.value {
+            if let row: TextRow = self.form.rowBy(tag: Rows.name.tag), let value = row.value {
                 name = value
             }
             

@@ -49,16 +49,11 @@ class AdamantChatsProvider: ChatsProvider {
 				return
 			}
 			
-			if let savedAddress = store.get(StoreKey.chatProvider.address), savedAddress == loggedAddress {
-				if let raw = store.get(StoreKey.chatProvider.readedLastHeight), let h = Int64(raw) {
-					self?.readedLastHeight = h
-				}
-			} else {
-				store.remove(StoreKey.chatProvider.receivedLastHeight)
-				store.remove(StoreKey.chatProvider.readedLastHeight)
-				self?.dropStateData()
-				store.set(loggedAddress, for: StoreKey.chatProvider.address)
-			}
+            if let account = store.getAccount(by: loggedAddress) {
+                self?.readedLastHeight = account.chatProvider.readedLastHeight
+            } else {
+                self?.dropStateData()
+            }
 			
 			self?.update()
 		}
@@ -205,14 +200,16 @@ extension AdamantChatsProvider {
 					self?.readedLastHeight = 0
 				}
 				
-				if let store = self?.securedStore {
+				if var account = self?.securedStore.getAccount(by: address) {
 					if let h = self?.receivedLastHeight {
-						store.set(String(h), for: StoreKey.chatProvider.receivedLastHeight)
+                        account.chatProvider.receivedLastHeight = h
 					}
 					
 					if let h = self?.readedLastHeight, h > 0 {
-						store.set(String(h), for: StoreKey.chatProvider.readedLastHeight)
+                        account.chatProvider.readedLastHeight = h
 					}
+                    
+                    self?.securedStore.updateAccount(account)
 				}
 				
 				if let synced = self?.isInitiallySynced, !synced {

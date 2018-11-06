@@ -10,7 +10,7 @@ import UIKit
 import Eureka
 import FreakingSimpleRoundImageView
 
-public final class AdamantAcountTableViewCell: Cell<SavedAccount>, CellType  {
+public final class AdamantAcountTableViewCell: Cell<LocalAdamantAccount>, CellType  {
 
     // MARK: IBOutlets
     @IBOutlet var titleLabel: UILabel!

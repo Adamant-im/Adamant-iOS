@@ -132,18 +132,24 @@ class MultiAccountViewController: FormViewController {
     }
     
     func changeAccount(_ address: String) {
+        DispatchQueue.main.async {
+            self.dialogService.showProgress(withMessage: nil, userInteractionEnable: false)
+        }
+        
         accountService.switchToAccount(address: address) { (result) in
-            //
+            DispatchQueue.main.async {
+                self.dialogService.dismissProgress()
+            }
         }
     }
     
-    private func createRowFor(account: SavedAccount, tag: String) -> BaseRow {
+    private func createRowFor(account: LocalAdamantAccount, tag: String) -> BaseRow {
         let row = AdamantAcountRow() {
             $0.value = account
             $0.tag = tag
             $0.cell.height = { 60 }
             let deleteAction = SwipeAction(style: .destructive, title: "Delete") { [weak self] (action, row, completionHandler) in
-                if let account = row.baseValue as? SavedAccount {
+                if let account = row.baseValue as? LocalAdamantAccount {
                     self?.accountService.removeAdditionalAccounts(address: account.address, completion: { (result) in
                         //
                     })
@@ -190,7 +196,7 @@ class MultiAccountViewController: FormViewController {
 }
 
 extension MultiAccountViewController: AccountEditorDelegate {
-    func accountDidAdded(_ account: SavedAccount) {
+    func accountDidAdded(_ account: LocalAdamantAccount) {
         guard let section = form.sectionBy(tag: Sections.accounts.tag) else {
             return
         }

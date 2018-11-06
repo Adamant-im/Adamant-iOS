@@ -22,8 +22,11 @@ class AdamantAccountService: AccountService {
 			defer {
 				securedStoreSemaphore.signal()
 			}
-			
-            if securedStore.get(.passphrase) != nil {
+            
+            if securedStore.get(.mainAccount) != nil {
+                hasStayInAccount = true
+                _useBiometry = securedStore.get(.useBiometry) != nil
+            } else if securedStore.get(.passphrase) != nil {
                 hasStayInAccount = true
                 _useBiometry = securedStore.get(.useBiometry) != nil
             } else if securedStore.get(.publicKey) != nil,
@@ -50,7 +53,7 @@ class AdamantAccountService: AccountService {
 	private(set) var keypair: Keypair?
 	private var passphrase: String?
     
-    private var mainAccount: SavedAccount?
+    private var mainAccount: LocalAdamantAccount?
 	
 	private func setState(_ state: AccountServiceState) {
 		stateSemaphore.wait()
@@ -115,7 +118,13 @@ extension AdamantAccountService {
 		securedStore.set(pin, for: .pin)
 		
 		if let passphrase = passphrase {
-			securedStore.set(passphrase, for: .passphrase)
+            mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: account.address, passphrase: passphrase)
+            
+            if let account = mainAccount {
+                _ = securedStore.saveMainAccount(account)
+            } else {
+                securedStore.set(passphrase, for: .passphrase)
+            }
 		} else {
 			securedStore.set(keypair.publicKey, for: .publicKey)
 			securedStore.set(keypair.privateKey, for: .privateKey)
@@ -137,14 +146,14 @@ extension AdamantAccountService {
             return
         }
         
-        var additionalAccounts = getAdditionalAccounts()
+        var additionalAccounts = securedStore.getAdditionalAccounts()
         let address = getAddress(from: keypair.publicKey)
         
         guard getMainAccount()?.address != address else {
             completion(.failure(.internalError(message: "Already logined in this account", error: nil)))
             return
         }
-        let account = SavedAccount(name: name, address: address, passphrase: passphrase)
+        let account = LocalAdamantAccount(name: name, address: address, passphrase: passphrase)
         
         if additionalAccounts[address] == nil {
             additionalAccounts[address] = account
@@ -157,7 +166,9 @@ extension AdamantAccountService {
             let jsonData = try JSONEncoder().encode(additionalAccounts)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 securedStore.set(jsonString, for: .additionalAccounts)
-                completion(.success(account: account, alert: nil))
+                switchToAccount(address: account.address) { (result) in
+                    completion(.success(account: account, alert: nil))
+                }
             } else {
                 print("Fail save additionl accounts to secure storege")
                 completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege", error: nil)))
@@ -168,21 +179,26 @@ extension AdamantAccountService {
         }
     }
     
-    func getAccounts() -> [String : SavedAccount] {
-        var accounts = [String : SavedAccount]()
+    func getAccounts() -> [String : LocalAdamantAccount] {
+        var accounts = [String : LocalAdamantAccount]()
         
         if let main = getMainAccount() {
             accounts[main.address] = main
         }
-        let additionalAccounts = getAdditionalAccounts()
-        accounts.merge(additionalAccounts) { (curent, new) -> SavedAccount in curent }
+        let additionalAccounts = securedStore.getAdditionalAccounts()
+        accounts.merge(additionalAccounts) { (curent, new) -> LocalAdamantAccount in curent }
         
         return accounts
     }
     
-    func getMainAccount() -> SavedAccount? {
+    func getMainAccount() -> LocalAdamantAccount? {
         if mainAccount != nil {
             return mainAccount
+        }
+        
+        if let mainAccount = securedStore.getMainAccount() {
+            self.mainAccount = mainAccount
+            return self.mainAccount
         }
         
         guard let passphrase = securedStore.get(Key.passphrase) else {
@@ -197,48 +213,36 @@ extension AdamantAccountService {
             return nil
         }
         
-//        guard let keypair = getSavedKeypair() else {
-//            return nil
-//        }
-        
         let address = getAddress(from: keypair.publicKey)
-        mainAccount = SavedAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: address, passphrase: passphrase)
+        mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: address, passphrase: passphrase)
+        
+        if let account = mainAccount {
+            _ = securedStore.saveMainAccount(account)
+        }
+        
         return mainAccount
     }
     
-    func getAdditionalAccounts() -> [String : SavedAccount] {
-        if let additionalAccountsRaw = securedStore.get(Key.additionalAccounts), let data = additionalAccountsRaw.data(using: .utf8) {
-            
-            do {
-                let additionalAccounts = try JSONDecoder().decode([String: SavedAccount].self, from: data)
-                return additionalAccounts
-            } catch let err {
-                print("Fail to get additionl accounts from secure storege with error: ", err)
-                return [String : SavedAccount]()
-            }
-        } else {
-            return [String : SavedAccount]()
-        }
+    func getAdditionalAccounts() -> [String : LocalAdamantAccount] {
+        return securedStore.getAdditionalAccounts()
     }
     
     func removeAdditionalAccounts(address: String, completion: @escaping (AccountServiceResult) -> Void) {
-        var additionalAccounts = getAdditionalAccounts()
+        var additionalAccounts = securedStore.getAdditionalAccounts()
         additionalAccounts.removeValue(forKey: address)
         
-        do {
-            let jsonData = try JSONEncoder().encode(additionalAccounts)
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                securedStore.set(jsonString, for: .additionalAccounts)
-                if address == account?.address {
-                    switchToAccount(address: getMainAccount()?.address ?? "", completion: completion)
-                }
+        if securedStore.saveAdditionalAccounts(additionalAccounts) {
+            if address == account?.address {
+                switchToAccount(address: getMainAccount()?.address ?? "", completion: completion)
+            }
+            
+            if let account = account {
+                completion(.success(account: account, alert: nil))
             } else {
-                print("Fail save additionl accounts to secure storege")
                 completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege", error: nil)))
             }
-        } catch let err {
-            print("Fail save additionl accounts to secure storege with error: ", err)
-            completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege with error:", error: err)))
+        } else {
+            completion(.failure(.internalError(message: "Fail save additionl accounts to secure storege", error: nil)))
         }
     }
     
@@ -296,6 +300,10 @@ extension AdamantAccountService {
 	}
 	
 	private func getSavedPassphrase() -> String? {
+        if let main = getMainAccount() {
+            return main.passphrase
+        }
+        
 		return securedStore.get(.passphrase)
 	}
 	
@@ -311,6 +319,8 @@ extension AdamantAccountService {
 		securedStore.remove(.privateKey)
 		securedStore.remove(.useBiometry)
 		securedStore.remove(.passphrase)
+        
+        securedStore.remove(.mainAccount)
         
         dropAdditionalAccounts()
         
@@ -487,7 +497,7 @@ extension AdamantAccountService {
 	func loginWithStoredAccount(completion: @escaping (AccountServiceResult) -> Void) {
 		if let passphrase = getSavedPassphrase() {
             if let address = securedStore.get(.lastUsedAccount) {
-                let accounts = getAdditionalAccounts()
+                let accounts = securedStore.getAdditionalAccounts()
                 if let lastUsedAccount = accounts[address] {
                     loginWith(passphrase: lastUsedAccount.passphrase, stayIn: true, completion: completion)
                     return
@@ -603,7 +613,6 @@ extension AdamantAccountService {
 	}
 }
 
-
 // MARK: - Secured Store
 extension StoreKey {
 	fileprivate struct accountService {
@@ -613,8 +622,11 @@ extension StoreKey {
 		static let useBiometry = "accountService.useBiometry"
 		static let passphrase = "accountService.passphrase"
         
+        static let mainAccount = "accountService.mainAccount"
         static let lastUsedAccount = "accountService.lastUsedAccount"
         static let additionalAccounts = "accountService.additionalAccounts"
+        
+        static let addressPool = "accountService.addressPool"
 		
 		private init() {}
 	}
@@ -627,8 +639,11 @@ fileprivate enum Key {
 	case useBiometry
 	case passphrase
     
+    case mainAccount
     case lastUsedAccount
     case additionalAccounts
+    
+    case addressPool
 	
 	var stringValue: String {
 		switch self {
@@ -638,8 +653,11 @@ fileprivate enum Key {
 		case .useBiometry: return StoreKey.accountService.useBiometry
 		case .passphrase: return StoreKey.accountService.passphrase
             
+        case .mainAccount: return StoreKey.accountService.mainAccount
         case .lastUsedAccount: return StoreKey.accountService.lastUsedAccount
         case .additionalAccounts: return StoreKey.accountService.additionalAccounts
+            
+        case .addressPool: return StoreKey.accountService.addressPool
 		}
 	}
 }
@@ -658,8 +676,193 @@ fileprivate extension SecuredStore {
 	}
 }
 
-public struct SavedAccount: Codable, Equatable {
+public struct LocalAdamantAccount: Codable, Equatable {
     var name: String
     var address: String
     var passphrase: String
+    
+    var chatProvider: NonificationProviderStorage = NonificationProviderStorage()
+    var transfersProvider: NonificationProviderStorage = NonificationProviderStorage()
+    
+    init(name: String, address: String, passphrase: String) {
+        self.name = name
+        self.address = address
+        self.passphrase = passphrase
+    }
+}
+
+public struct NonificationProviderStorage: Codable, Equatable {
+    var receivedLastHeight: Int64? = 0
+    var readedLastHeight: Int64? = 0
+    var notifiedLastHeight: Int64? = 0
+    var notifiedCount: Int? = 0
+}
+
+
+// MARK: - Multi-Account heplers
+extension SecuredStore {
+    func getMainAccount() -> LocalAdamantAccount? {
+        if let mainAccountRaw = self.get(Key.mainAccount), let data = mainAccountRaw.data(using: .utf8) {
+            do {
+                let mainAccount = try JSONDecoder().decode(LocalAdamantAccount.self, from: data)
+                return mainAccount
+            } catch let err {
+                print("Fail to get main accounts from secure storege with error: ", err)
+            }
+        }
+        
+        return nil
+    }
+    
+    func saveMainAccount(_ account: LocalAdamantAccount) -> Bool {
+        do {
+            let jsonData = try JSONEncoder().encode(account)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                self.set(jsonString, for: .mainAccount)
+                return true
+            } else {
+                print("Fail save main account to secure storege")
+                return false
+            }
+        } catch let err {
+            print("Fail save main account to secure storege with error: ", err)
+            return false
+        }
+    }
+    
+    func getAdditionalAccounts() -> [String : LocalAdamantAccount] {
+        if let additionalAccountsRaw = self.get(Key.additionalAccounts), let data = additionalAccountsRaw.data(using: .utf8) {
+            
+            do {
+                let additionalAccounts = try JSONDecoder().decode([String: LocalAdamantAccount].self, from: data)
+                return additionalAccounts
+            } catch let err {
+                print("Fail to get additionl accounts from secure storege with error: ", err)
+                return [String : LocalAdamantAccount]()
+            }
+        } else {
+            return [String : LocalAdamantAccount]()
+        }
+    }
+    
+    func saveAdditionalAccounts(_ accounts: [String : LocalAdamantAccount]) -> Bool {
+        do {
+            let jsonData = try JSONEncoder().encode(accounts)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                self.set(jsonString, for: .additionalAccounts)
+                return true
+            } else {
+                print("Fail save additionl accounts to secure storege")
+                return false
+            }
+        } catch let err {
+            print("Fail save additionl accounts to secure storege with error: ", err)
+            return false
+        }
+    }
+    
+    func getAccounts() -> [String : LocalAdamantAccount] {
+        var accounts = [String : LocalAdamantAccount]()
+        
+        if let main = getMainAccount() {
+            accounts[main.address] = main
+        }
+        let additionalAccounts = getAdditionalAccounts()
+        accounts.merge(additionalAccounts) { (curent, new) -> LocalAdamantAccount in curent }
+        
+        return accounts
+    }
+    
+    func getAccount(by address: String) -> LocalAdamantAccount? {
+        let accounts = getAccounts()
+        return accounts[address]
+    }
+    
+    func updateAccount(_ account: LocalAdamantAccount) {
+        let mainAccount = getMainAccount()
+        if account.address == mainAccount?.address {
+            _ = self.saveMainAccount(account)
+        } else {
+            var accounts = getAdditionalAccounts()
+            accounts[account.address] = account
+            _ = self.saveAdditionalAccounts(accounts)
+        }
+    }
+    
+    // MARK: Address pool methods
+    
+    func getNextAddress() -> String? {
+        let addressPool = getCurrentAddressPool()
+        if addressPool.count > 0 {
+            return addressPool.first
+        } else {
+            return getNewAddressPool().first
+        }
+    }
+    
+    func getCurrentAddressPool() -> [String] {
+        let defaultAddressPool = getAddressPool()
+        if var addressPool = getLastAddressPool() {
+            if addressPool.count < defaultAddressPool.count {
+                addressPool.append(contentsOf: defaultAddressPool)
+                saveAddressPool(addressPool)
+                return addressPool
+            } else {
+                return addressPool
+            }
+        } else {
+            saveAddressPool(defaultAddressPool)
+            return defaultAddressPool
+        }
+    }
+    
+    func removeAddress(_ address: String) {
+        if var addressPool = getLastAddressPool() {
+            if let idx = addressPool.index(of: address) {
+                addressPool.remove(at: idx)
+            }
+            
+            saveAddressPool(addressPool)
+        }
+    }
+    
+    private func getAddressPool() -> [String] {
+        return Array(getAccounts().keys)
+    }
+    
+    private func getNewAddressPool() -> [String] {
+        let addressPool = getAddressPool()
+        
+        saveAddressPool(addressPool)
+        
+        return addressPool
+    }
+    
+    private func getLastAddressPool() -> [String]? {
+        if let raw = self.get(Key.addressPool), let data = raw.data(using: .utf8) {
+            do {
+                let addressPool = try JSONDecoder().decode([String].self, from: data)
+                
+                return addressPool
+            } catch let err {
+                print("Fail to get address pool from secure storege with error: ", err)
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+    
+    private func saveAddressPool(_ addressPool: [String]) {
+        do {
+            let jsonData = try JSONEncoder().encode(addressPool)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                self.set(jsonString, for: .addressPool)
+            } else {
+                print("Fail save address pool to secure storege")
+            }
+        } catch let err {
+            print("Fail save address pool to secure storege with error: ", err)
+        }
+    }
 }

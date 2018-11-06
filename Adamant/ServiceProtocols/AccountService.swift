@@ -79,7 +79,7 @@ enum AccountServiceResult {
 }
 
 enum AccountSavingResult {
-    case success(account: SavedAccount, alert: (title: String, message: String)?)
+    case success(account: LocalAdamantAccount, alert: (title: String, message: String)?)
     case failure(AccountServiceError)
 }
 
@@ -198,9 +198,9 @@ protocol AccountService: class {
     
     /// Add aditional account to currently logined
     func addAccount(name: String, passphrase: String, completion: @escaping (AccountSavingResult) -> Void)
-    func getAccounts() -> [String : SavedAccount]
-    func getMainAccount() -> SavedAccount?
-    func getAdditionalAccounts() -> [String : SavedAccount]
+    func getAccounts() -> [String : LocalAdamantAccount]
+    func getMainAccount() -> LocalAdamantAccount?
+    func getAdditionalAccounts() -> [String : LocalAdamantAccount]
     func removeAdditionalAccounts(address: String, completion: @escaping (AccountServiceResult) -> Void)
     func dropAdditionalAccounts()
     func switchToAccount(address: String, completion: @escaping (AccountServiceResult) -> Void)

@@ -163,14 +163,15 @@ extension AdamantTransfersProvider {
                     self?.readedLastHeight = 0
                 }
                 
-                if let store = self?.securedStore {
+                if var account = self?.securedStore.getAccount(by: address) {
                     if let h = self?.receivedLastHeight {
-                        store.set(String(h), for: StoreKey.chatProvider.receivedLastHeight)
+                       account.transfersProvider.receivedLastHeight = h
                     }
                     
                     if let h = self?.readedLastHeight, h > 0 {
-                        store.set(String(h), for: StoreKey.chatProvider.readedLastHeight)
+                        account.transfersProvider.readedLastHeight = h
                     }
+                    self?.securedStore.updateAccount(account)
                 }
                 
                 if let synced = self?.isInitiallySynced, !synced {
