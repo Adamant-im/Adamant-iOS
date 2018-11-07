@@ -13,8 +13,6 @@ extension AdamantTransfersProvider: BackgroundFetchService {
         let addressPool = securedStore.getCurrentAddressPool()
         
         for address in addressPool {
-            self.securedStore.removeAddress(address)
-            
             if var account = securedStore.getAccount(by: address) {
                 var lastHeight: Int64?
                 if let raw = account.transfersProvider.receivedLastHeight {
@@ -37,6 +35,8 @@ extension AdamantTransfersProvider: BackgroundFetchService {
                 }
                 
                 apiService.getTransactions(forAccount: address, type: .send, fromHeight: lastHeight, offset: 0, limit: 100) { result in
+                    self.securedStore.removeAddress(address)
+                    
                     switch result {
                     case .success(let transactions):
                         let total = transactions.filter({$0.recipientId == address}).count
@@ -52,14 +52,10 @@ extension AdamantTransfersProvider: BackgroundFetchService {
                             self.securedStore.updateAccount(account)
                             
                             notificationsService.showNotification(title: String.adamantLocalized.notifications.newTransferTitle, account: account, body: String.localizedStringWithFormat(String.adamantLocalized.notifications.newTransferBody, total + notifiedCount), type: .newTransactions(count: total))
-                            
-                            completion(.newData)
-                        } else {
-                            completion(.noData)
                         }
-                        
+                        break
                     case .failure(_):
-                        completion(.failed)
+                        break
                     }
                 }
             }

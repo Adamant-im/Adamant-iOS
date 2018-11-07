@@ -163,11 +163,15 @@ extension AdamantNotificationsService {
 	}
     
     func showNotification(title: String, account: LocalAdamantAccount?, body: String, type: AdamantNotificationType) {
+        var identifier = type.identifier
+        
         let content = UNMutableNotificationContent()
         content.title = title
         if let account = account {
             content.subtitle = account.getNameOrAddress()
             content.userInfo["address"] = account.address
+            
+            identifier += "::\(account.address)"
         }
         content.body = body
         content.sound = UNNotificationSound(named: UNNotificationSoundName("notification.mp3"))
@@ -187,7 +191,7 @@ extension AdamantNotificationsService {
         }
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        let request = UNNotificationRequest(identifier: type.identifier, content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
