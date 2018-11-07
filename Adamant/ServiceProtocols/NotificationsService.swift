@@ -122,6 +122,7 @@ protocol NotificationsService: class {
 	func setNotificationsMode(_ mode: NotificationsMode, completion: ((NotificationsServiceResult) -> Void)?)
 	
 	func showNotification(title: String, body: String, type: AdamantNotificationType)
+    func showNotification(title: String, account: LocalAdamantAccount?, body: String, type: AdamantNotificationType)
 	
 	func setBadge(number: Int?)
 	

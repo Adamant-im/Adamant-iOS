@@ -689,6 +689,13 @@ public struct LocalAdamantAccount: Codable, Equatable {
         self.address = address
         self.passphrase = passphrase
     }
+    
+    func getNameOrAddress() -> String {
+        if name == "" {
+            return address
+        }
+        return name
+    }
 }
 
 public struct NonificationProviderStorage: Codable, Equatable {
@@ -701,6 +708,10 @@ public struct NonificationProviderStorage: Codable, Equatable {
 
 // MARK: - Multi-Account heplers
 extension SecuredStore {
+    func setLastUsedAccount(_ account: LocalAdamantAccount) {
+        set(account.address, for: .lastUsedAccount)
+    }
+    
     func getMainAccount() -> LocalAdamantAccount? {
         if let mainAccountRaw = self.get(Key.mainAccount), let data = mainAccountRaw.data(using: .utf8) {
             do {

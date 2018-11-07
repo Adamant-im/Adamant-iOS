@@ -10,7 +10,7 @@ import UIKit
 import Swinject
 import CryptoSwift
 import CoreData
-
+import UserNotifications
 
 // MARK: - Constants
 extension String.adamantLocalized {
@@ -212,6 +212,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		
 		// MARK: 7. Welcome messages
 		NotificationCenter.default.addObserver(forName: Notification.Name.AdamantChatsProvider.initialSyncFinished, object: nil, queue: OperationQueue.main, using: handleWelcomeMessages)
+        
+        UNUserNotificationCenter.current().delegate = self
 		
 		return true
 	}
@@ -249,7 +251,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 // MARK: - Remote notifications
-extension AppDelegate {
+extension AppDelegate: UNUserNotificationCenterDelegate {
 	private struct RegistrationPayload: Codable {
 		let token: String
 		
@@ -323,6 +325,24 @@ extension AppDelegate {
 			service.showError(withMessage: String.localizedStringWithFormat(String.adamantLocalized.notifications.registerRemotesError, error.localizedDescription), error: error)
 		}
 	}
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        // Determine the user action
+        switch response.actionIdentifier {
+        case UNNotificationDefaultActionIdentifier:
+            if let address = response.notification.request.content.userInfo["address"] as? String {
+                if let securedStore = container.resolve(SecuredStore.self) {
+                    if let account = securedStore.getAccount(by: address) {
+                        securedStore.setLastUsedAccount(account)
+                    }
+                }
+            }
+            
+        default:
+            print("Unknown action")
+        }
+        completionHandler()
+    }
 }
 
 

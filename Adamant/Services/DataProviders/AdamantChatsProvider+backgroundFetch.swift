@@ -13,6 +13,8 @@ extension AdamantChatsProvider: BackgroundFetchService {
         let addressPool = securedStore.getCurrentAddressPool()
         
         for address in addressPool {
+            self.securedStore.removeAddress(address)
+            
             if var account = securedStore.getAccount(by: address) {
                 var lastHeight: Int64?
                 if let raw = account.chatProvider.receivedLastHeight {
@@ -46,7 +48,7 @@ extension AdamantChatsProvider: BackgroundFetchService {
                             
                             self.securedStore.updateAccount(account)
                             
-                            notificationsService.showNotification(title: String.adamantLocalized.notifications.newMessageTitle, body: String.localizedStringWithFormat(String.adamantLocalized.notifications.newMessageBody, total + notifiedCount), type: .newMessages(count: total))
+                            notificationsService.showNotification(title: String.adamantLocalized.notifications.newMessageTitle, account: account, body: String.localizedStringWithFormat(String.adamantLocalized.notifications.newMessageBody, total + notifiedCount), type: .newMessages(count: total))
                             
                             completion(.newData)
                         } else {

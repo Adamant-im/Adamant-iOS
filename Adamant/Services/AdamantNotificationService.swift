@@ -159,34 +159,42 @@ extension AdamantNotificationsService {
 // MARK: - Posting & removing Notifications
 extension AdamantNotificationsService {
 	func showNotification(title: String, body: String, type: AdamantNotificationType) {
-		let content = UNMutableNotificationContent()
-		content.title = title
-		content.body = body
-		content.sound = UNNotificationSound(named: UNNotificationSoundName("notification.mp3"))
-		
-		if let number = type.badge {
-			if Thread.isMainThread {
-				content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
-			} else {
-				DispatchQueue.main.sync {
-					content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
-				}
-			}
-			
-			if isBackgroundSession {
-				backgroundNotifications += number
-			}
-		}
-		
-		let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-		let request = UNNotificationRequest(identifier: type.identifier, content: content, trigger: trigger)
-		
-		UNUserNotificationCenter.current().add(request) { error in
-			if let error = error {
-				print(error)
-			}
-		}
+		self.showNotification(title: title, account: nil, body: body, type: type)
 	}
+    
+    func showNotification(title: String, account: LocalAdamantAccount?, body: String, type: AdamantNotificationType) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        if let account = account {
+            content.subtitle = account.getNameOrAddress()
+            content.userInfo["address"] = account.address
+        }
+        content.body = body
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("notification.mp3"))
+        
+        if let number = type.badge {
+            if Thread.isMainThread {
+                content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
+            } else {
+                DispatchQueue.main.sync {
+                    content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
+                }
+            }
+            
+            if isBackgroundSession {
+                backgroundNotifications += number
+            }
+        }
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: type.identifier, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print(error)
+            }
+        }
+    }
 	
 	func setBadge(number: Int?) {
 		setBadge(number: number, force: false)
