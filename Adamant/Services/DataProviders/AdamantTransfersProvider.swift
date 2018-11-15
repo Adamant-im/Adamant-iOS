@@ -71,17 +71,16 @@ class AdamantTransfersProvider: TransfersProvider {
 				self?.dropStateData()
 				return
 			}
-			
-			if let savedAddress = store.get(StoreKey.transfersProvider.address), savedAddress == loggedAddress {
-				if let raw = store.get(StoreKey.transfersProvider.readedLastHeight), let h = Int64(raw) {
-					self?.readedLastHeight = h
-				}
-			} else {
-				store.remove(StoreKey.transfersProvider.receivedLastHeight)
-				store.remove(StoreKey.transfersProvider.readedLastHeight)
-				self?.dropStateData()
-				store.set(loggedAddress, for: StoreKey.transfersProvider.address)
-			}
+            
+            if let account = store.getAccount(by: loggedAddress) {
+                if let readedLastHeight = account.transfersProvider.readedLastHeight, readedLastHeight > 0 {
+                    self?.readedLastHeight = readedLastHeight
+                } else {
+                    self?.readedLastHeight = nil
+                }
+            } else {
+                self?.dropStateData()
+            }
 			
 			self?.update()
 		}
@@ -164,6 +163,8 @@ extension AdamantTransfersProvider {
                 }
                 
                 if var account = self?.securedStore.getAccount(by: address) {
+                    self?.isInitiallySynced = account.chatProvider.isInitialySynced()
+                    
                     if let h = self?.receivedLastHeight {
                        account.transfersProvider.receivedLastHeight = h
                     }
@@ -683,12 +684,16 @@ extension AdamantTransfersProvider {
             readedLastHeight = self.receivedLastHeight
         }
         
-        if let h = self.receivedLastHeight {
-            securedStore.set(String(h), for: StoreKey.transfersProvider.receivedLastHeight)
-        }
-        
-        if let h = self.readedLastHeight {
-            securedStore.set(String(h), for: StoreKey.transfersProvider.readedLastHeight)
+        if var account = securedStore.getAccount(by: address) {
+            if let h = self.receivedLastHeight {
+                account.transfersProvider.receivedLastHeight = h
+            }
+            
+            if let h = self.readedLastHeight {
+                account.transfersProvider.readedLastHeight = h
+            }
+            
+            self.securedStore.updateAccount(account)
         }
         
         // MARK: 6. Dump transactions to viewContext

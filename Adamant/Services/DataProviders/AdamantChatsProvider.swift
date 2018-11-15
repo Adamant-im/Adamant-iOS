@@ -50,7 +50,11 @@ class AdamantChatsProvider: ChatsProvider {
 			}
 			
             if let account = store.getAccount(by: loggedAddress) {
-                self?.readedLastHeight = account.chatProvider.readedLastHeight
+                if let readedLastHeight = account.chatProvider.readedLastHeight, readedLastHeight > 0 {
+                    self?.readedLastHeight = readedLastHeight
+                } else {
+                    self?.readedLastHeight = nil
+                }
             } else {
                 self?.dropStateData()
             }
@@ -201,6 +205,8 @@ extension AdamantChatsProvider {
 				}
 				
 				if var account = self?.securedStore.getAccount(by: address) {
+                    self?.isInitiallySynced = account.chatProvider.isInitialySynced()
+                    
 					if let h = self?.receivedLastHeight {
                         account.chatProvider.receivedLastHeight = h
 					}
