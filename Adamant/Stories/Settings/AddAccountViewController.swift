@@ -64,6 +64,7 @@ class AddAccountViewController: FormViewController {
     
     // MARK: Dependencies
     var accountService: AccountService!
+    var notificationsService: NotificationsService!
     var dialogService: DialogService!
     
     // MARK: - Properties
@@ -144,6 +145,9 @@ class AddAccountViewController: FormViewController {
                 
                 switch result {
                 case .success(let account, _):
+                    if self.notificationsService.notificationsMode == .push, let token = self.notificationsService.savedToken, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.registerRemoteNotification(for: account, with: token)
+                    }
                     self.delegate?.accountDidAdded(account)
                     self.dismiss(animated: true, completion: nil)
                     self.navigationController?.popViewController(animated: true)

@@ -55,6 +55,7 @@ class MultiAccountViewController: FormViewController {
     // MARK: - Dependencies
     
     var accountService: AccountService!
+    var notificationsService: NotificationsService!
     var dialogService: DialogService!
     var localAuth: LocalAuthentication!
     var router: Router!
@@ -150,6 +151,10 @@ class MultiAccountViewController: FormViewController {
             $0.cell.height = { 60 }
             let deleteAction = SwipeAction(style: .destructive, title: "Delete") { [weak self] (action, row, completionHandler) in
                 if let account = row.baseValue as? LocalAdamantAccount {
+                    if let token = self?.notificationsService.savedToken, let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.unregisterRemoteNotification(for: account, with: token)
+                    }
+                    
                     self?.accountService.removeAdditionalAccounts(address: account.address, completion: { (result) in
                         //
                     })

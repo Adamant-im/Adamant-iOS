@@ -210,7 +210,7 @@ class SecurityViewController: FormViewController {
         
         let cuttentAccountRow = AdamantAcountRow() {
             $0.tag = Rows.currentAccount.tag
-            $0.value = LocalAdamantAccount(name: Rows.currentAccount.localized, address: accountService.account?.address ?? "", passphrase: "")
+            $0.value = LocalAdamantAccount(name: Rows.currentAccount.localized, address: accountService.account?.address ?? "")
             }.cellSetup { (cell, _) in
                 cell.selectionStyle = .gray
             }.cellUpdate({ (cell, _) in

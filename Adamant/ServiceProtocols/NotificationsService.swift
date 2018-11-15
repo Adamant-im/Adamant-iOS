@@ -118,6 +118,7 @@ enum NotificationsServiceResult {
 
 protocol NotificationsService: class {
 	var notificationsMode: NotificationsMode { get }
+    var savedToken: String? { get }
 	
 	func setNotificationsMode(_ mode: NotificationsMode, completion: ((NotificationsServiceResult) -> Void)?)
 	

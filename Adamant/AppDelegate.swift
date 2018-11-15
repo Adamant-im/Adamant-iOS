@@ -254,70 +254,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 extension AppDelegate: UNUserNotificationCenterDelegate {
 	private struct RegistrationPayload: Codable {
 		let token: String
-		
+		let action: String = "add"
+        
 		#if DEBUG
 			let provider: String = "apns-sandbox"
 		#else
 			let provider: String = "apns"
 		#endif
 	}
+    
+    private struct UnRegistrationPayload: Codable {
+        let token: String
+        let action: String = "remove"
+        
+        #if DEBUG
+        let provider: String = "apns-sandbox"
+        #else
+        let provider: String = "apns"
+        #endif
+    }
 	
 	func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-		guard let address = accountService.account?.address, let keypair = accountService.keypair else {
-			print("Trying to register with no user logged")
-			UIApplication.shared.unregisterForRemoteNotifications()
-			return
-		}
-		
-		let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-		
-		// MARK: 1. Checking, if device token had not changed
-		guard let securedStore = container.resolve(SecuredStore.self) else {
-			fatalError("can't get secured store to get device token hash")
-		}
-		
-		let tokenHash = token.md5()
-		
-		if let savedHash = securedStore.get(StoreKey.application.deviceTokenHash), tokenHash == savedHash {
-			return
-		} else {
-			securedStore.set(tokenHash, for: StoreKey.application.deviceTokenHash)
-		}
-		
-		// MARK: 2. Preparing message
-		guard let adamantCore = container.resolve(AdamantCore.self) else {
-			fatalError("Can't get AdamantCore to register device token")
-		}
-		
-		let payload: String
-		do {
-			let data = try JSONEncoder().encode(RegistrationPayload(token: token))
-			payload = String(data: data, encoding: String.Encoding.utf8)!
-		} catch {
-			dialogService.showError(withMessage: "Failed to prepare ANS signal payload", error: error)
-			return
-		}
-		
-		guard let encodedPayload = adamantCore.encodeMessage(payload, recipientPublicKey: AdamantResources.contacts.ansPublicKey, privateKey: keypair.privateKey) else {
-			dialogService.showError(withMessage: "Failed to encode ANS signal. Payload: \(payload)", error: nil)
-			return
-		}
-		
-		// MARK: 3. Send signal to ANS
-		guard let apiService = container.resolve(ApiService.self) else {
-			fatalError("can't get api service to register device token")
-		}
-		
-		apiService.sendMessage(senderId: address, recipientId: AdamantResources.contacts.ansAddress, keypair: keypair, message: encodedPayload.message, type: ChatType.signal, nonce: encodedPayload.nonce) { [unowned self] result in
-			switch result {
-			case .success:
-				return
-				
-			case .failure(let error):
-				self.notificationService?.setNotificationsMode(.disabled, completion: nil)
-				self.dialogService.showRichError(error: error)
-			}
-		}
+        let accounts = Array(accountService.getAccounts().values)
+        
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        
+        // MARK: 1. Checking, if device token had not changed
+        guard let securedStore = container.resolve(SecuredStore.self) else {
+            fatalError("can't get secured store to get device token hash")
+        }
+        
+        let tokenHash = token//.md5()
+        
+        if let savedHash = securedStore.get(StoreKey.application.deviceTokenHash), tokenHash == savedHash {
+            return
+        } else {
+            securedStore.set(tokenHash, for: StoreKey.application.deviceTokenHash)
+        }
+        
+        for account in accounts {
+            self.registerRemoteNotification(for: account, with: token)
+        }
 	}
 	
 	func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
@@ -440,4 +417,70 @@ extension AppDelegate {
 									  completion: { _ in })
 		}
 	}
+}
+
+// MARK: - Register/Unregisted remote notification
+extension AppDelegate {
+    func registerRemoteNotification(for account: LocalAdamantAccount, with token: String) {
+        // MARK: 1. Preparing message
+        let payload: String
+        do {
+            let data = try JSONEncoder().encode(RegistrationPayload(token: token))
+            payload = String(data: data, encoding: String.Encoding.utf8)!
+        } catch {
+            dialogService.showError(withMessage: "Failed to prepare ANS signal payload", error: error)
+            return
+        }
+        
+        // MARK: 2. Send action
+        self.sendAction(payload, for: account, with: token)
+    }
+    
+    func unregisterRemoteNotification(for account: LocalAdamantAccount, with token: String) {
+        // MARK: 1. Preparing message
+        let payload: String
+        do {
+            let data = try JSONEncoder().encode(UnRegistrationPayload(token: token))
+            payload = String(data: data, encoding: String.Encoding.utf8)!
+        } catch {
+            dialogService.showError(withMessage: "Failed to prepare ANS signal payload", error: error)
+            return
+        }
+        
+        // MARK: 2. Send action
+        self.sendAction(payload, for: account, with: token)
+    }
+    
+    func sendAction(_ payload: String, for account: LocalAdamantAccount, with token: String) {
+        // MARK: 1. Check dependencies
+        guard let adamantCore = container.resolve(AdamantCore.self) else {
+            fatalError("Can't get AdamantCore to register device token")
+        }
+        
+        guard let apiService = container.resolve(ApiService.self) else {
+            fatalError("can't get api service to register device token")
+        }
+        
+        if let keypair = account.getKeyPair() {
+            let address = account.address
+            
+            // MARK: 2. Preparing message
+            guard let encodedPayload = adamantCore.encodeMessage(payload, recipientPublicKey: AdamantResources.contacts.ansPublicKey, privateKey: keypair.privateKey) else {
+                dialogService.showError(withMessage: "Failed to encode ANS signal. Payload: \(payload)", error: nil)
+                return
+            }
+            
+            // MARK: 3. Send signal to ANS
+            apiService.sendMessage(senderId: address, recipientId: AdamantResources.contacts.ansAddress, keypair: keypair, message: encodedPayload.message, type: ChatType.signal, nonce: encodedPayload.nonce) { [unowned self] result in
+                switch result {
+                case .success:
+                    return
+                    
+                case .failure(let error):
+                    self.notificationService?.setNotificationsMode(.disabled, completion: nil)
+                    self.dialogService.showRichError(error: error)
+                }
+            }
+        }
+    }
 }

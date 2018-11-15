@@ -118,7 +118,7 @@ extension AdamantAccountService {
 		securedStore.set(pin, for: .pin)
 		
 		if let passphrase = passphrase {
-            mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: account.address, passphrase: passphrase)
+            mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: account.address, passphrase: passphrase, keyPair: keypair)
             
             if let account = mainAccount {
                 _ = securedStore.saveMainAccount(account)
@@ -153,7 +153,7 @@ extension AdamantAccountService {
             completion(.failure(.internalError(message: "Already logined in this account", error: nil)))
             return
         }
-        let account = LocalAdamantAccount(name: name, address: address, passphrase: passphrase)
+        let account = LocalAdamantAccount(name: name, address: address, passphrase: passphrase, keyPair: keypair)
         
         if additionalAccounts[address] == nil {
             additionalAccounts[address] = account
@@ -214,7 +214,7 @@ extension AdamantAccountService {
         }
         
         let address = getAddress(from: keypair.publicKey)
-        mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: address, passphrase: passphrase)
+        mainAccount = LocalAdamantAccount(name: String.adamantLocalized.multiAccount.mainAccount, address: address, passphrase: passphrase, keyPair: keypair)
         
         if let account = mainAccount {
             _ = securedStore.saveMainAccount(account)
@@ -608,7 +608,7 @@ extension AdamantAccountService {
 		}
 		
 		if wasLogged {
-			NotificationCenter.default.post(name: Notification.Name.AdamantAccountService.userLoggedOut, object: self)
+            NotificationCenter.default.post(name: Notification.Name.AdamantAccountService.userLoggedOut, object: self, userInfo: ["stayIn": stayIn])
 		}
 	}
 }
@@ -680,14 +680,21 @@ public struct LocalAdamantAccount: Codable, Equatable {
     var name: String
     var address: String
     var passphrase: String
+    var publicKey: String?
+    var privateKey: String?
     
     var chatProvider: NonificationProviderStorage = NonificationProviderStorage()
     var transfersProvider: NonificationProviderStorage = NonificationProviderStorage()
     
-    init(name: String, address: String, passphrase: String) {
+    init(name: String, address: String, passphrase: String = "", keyPair: Keypair? = nil) {
         self.name = name
         self.address = address
         self.passphrase = passphrase
+        
+        if let keyPair = keyPair {
+            self.publicKey = keyPair.publicKey
+            self.privateKey = keyPair.privateKey
+        }
     }
     
     func getNameOrAddress() -> String {
@@ -695,6 +702,13 @@ public struct LocalAdamantAccount: Codable, Equatable {
             return address
         }
         return name
+    }
+    
+    func getKeyPair() -> Keypair? {
+        if let publicKey = self.publicKey, let privateKey = self.privateKey {
+            return Keypair(publicKey: publicKey, privateKey: privateKey)
+        }
+        return nil
     }
 }
 
@@ -705,6 +719,14 @@ public struct NonificationProviderStorage: Codable, Equatable {
     var notifiedCount: Int? = 0
 }
 
+extension NonificationProviderStorage {
+    func isInitialySynced() -> Bool {
+        if let lastHeight = receivedLastHeight, lastHeight > 0 {
+            return true
+        }
+        return false
+    }
+}
 
 // MARK: - Multi-Account heplers
 extension SecuredStore {

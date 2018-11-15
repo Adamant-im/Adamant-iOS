@@ -38,6 +38,13 @@ class AdamantNotificationsService: NotificationsService {
 	private var backgroundNotifications = 0
 	
 	private var preservedBadgeNumber: Int? = nil
+    
+    var savedToken: String? {
+        if let savedHash = securedStore.get(StoreKey.application.deviceTokenHash) {
+            return savedHash
+        }
+        return nil
+    }
 	
 	// MARK: Lifecycle
 	init() {
@@ -54,7 +61,12 @@ class AdamantNotificationsService: NotificationsService {
 			self?.preservedBadgeNumber = nil
 		}
 		
-		NotificationCenter.default.addObserver(forName: Notification.Name.AdamantAccountService.userLoggedOut, object: nil, queue: nil) { [weak self] _ in
+		NotificationCenter.default.addObserver(forName: Notification.Name.AdamantAccountService.userLoggedOut, object: nil, queue: nil) { [weak self] notification in
+            
+            if let stayIn = notification.userInfo?["stayIn"] as? Bool, stayIn == true {
+                return
+            }
+            
 			self?.setNotificationsMode(.disabled, completion: nil)
 			self?.securedStore.remove(StoreKey.notificationsService.notificationsMode)
 			self?.preservedBadgeNumber = nil
