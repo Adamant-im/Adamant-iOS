@@ -16,6 +16,13 @@ public final class AdamantAcountTableViewCell: Cell<LocalAdamantAccount>, CellTy
     @IBOutlet var titleLabel: UILabel!
     @IBOutlet var detailsLabel: UILabel!
     @IBOutlet var avatarImageView: RoundImageView!
+    @IBOutlet weak var badgeView: UIView!
+    @IBOutlet weak var badgeLabel: UILabel!
+    
+    public func setAccountsBadge(_ value: Int) {
+        self.badgeView.isHidden = value <= 0
+        self.badgeLabel.text = "\(value)"
+    }
     
     public override func update() {
         super.update()
@@ -23,15 +30,20 @@ public final class AdamantAcountTableViewCell: Cell<LocalAdamantAccount>, CellTy
         if let value = row.value {
             titleLabel.text = value.name
             detailsLabel.text = value.address
+            setAccountsBadge(value.getUnreaded())
         } else {
             titleLabel.text = nil
             detailsLabel.text = nil
+            setAccountsBadge(0)
         }
         
         avatarImageView.image = ChatTableViewCell.defaultAvatar
         avatarImageView.tintColor = UIColor.adamant.primary
         avatarImageView.borderColor = UIColor.adamant.primary
         avatarImageView.borderWidth = 1
+        
+        badgeView.layer.cornerRadius = badgeView.bounds.height / 2
+        self.badgeView.backgroundColor = UIColor.adamant.primary
     }
 }
 

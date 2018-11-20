@@ -204,6 +204,8 @@ protocol AccountService: class {
     func removeAdditionalAccounts(address: String, completion: @escaping (AccountServiceResult) -> Void)
     func dropAdditionalAccounts()
     func switchToAccount(address: String, completion: @escaping (AccountServiceResult) -> Void)
+    func getAllUnreaded() -> Int
+    func setUnreadedChats(_ value: Int)
 	
 	/// Remove stored data
 	func dropSavedAccount()

@@ -69,7 +69,7 @@ class MultiAccountViewController: FormViewController {
             let section = Section()
             section <<< AdamantAcountRow() {
                 $0.value = mainAccount
-                $0.cell.height = { 80 }
+                $0.cell.height = { 60 }
                 }.cellUpdate({ (cell, _) in
                     if cell.row.value?.address == self.accountService.account?.address {
                         cell.accessoryType = .checkmark
@@ -77,7 +77,7 @@ class MultiAccountViewController: FormViewController {
                         cell.accessoryType = .none
                     }
                 }).onCellSelection { [weak self] (_, row) in
-                    guard let account = row.value else {
+                    guard let account = row.value, account.address != self?.accountService.account?.address else {
                         return
                     }
                     
@@ -177,7 +177,7 @@ class MultiAccountViewController: FormViewController {
                     cell.accessoryType = .none
                 }
             }).onCellSelection { [weak self] (_, row) in
-                guard let account = row.value else {
+                guard let account = row.value, account.address != self?.accountService.account?.address else {
                     return
                 }
                 

@@ -109,6 +109,9 @@
 /* Account tab: 'Logout' button */
 "AccountTab.Row.Logout" = "Logout";
 
+/* "Account tab: Confirm logout alert: 'Logout all counts' button" */
+"AccountTab.ConfirmLogout.LogoutAll" = "Complete Logout";
+
 /* Account tab: 'Security' row */
 "AccountTab.Row.Security" = "Security";
 

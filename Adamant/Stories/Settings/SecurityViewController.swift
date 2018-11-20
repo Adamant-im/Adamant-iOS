@@ -196,7 +196,7 @@ class SecurityViewController: FormViewController {
 		form.append(stayInSection)
         
         // Accounts section
-        let accountsSection = Section(Sections.accounts.localized) {
+        let accountsSection = Section() {
             $0.tag = Sections.accounts.tag
             
             $0.hidden = Condition.function([], { [weak self] _ -> Bool in
@@ -208,14 +208,13 @@ class SecurityViewController: FormViewController {
             })
         }
         
-        let cuttentAccountRow = AdamantAcountRow() {
-            $0.tag = Rows.currentAccount.tag
-            $0.value = LocalAdamantAccount(name: Rows.currentAccount.localized, address: accountService.account?.address ?? "")
-            }.cellSetup { (cell, _) in
-                cell.selectionStyle = .gray
+        let multiAccountRow = LabelRow() {
+            $0.title = Sections.accounts.localized
+            $0.tag = Sections.accounts.tag
+            $0.cell.selectionStyle = .gray
             }.cellUpdate({ (cell, _) in
                 cell.accessoryType = .disclosureIndicator
-            }).onCellSelection { [weak self] (_, row) in
+            }).onCellSelection { [weak self] (_, _) in
                 guard let nav = self?.navigationController, let vc = self?.router.get(scene: AdamantScene.Settings.multiAccount) else {
                     return
                 }
@@ -223,7 +222,7 @@ class SecurityViewController: FormViewController {
                 nav.pushViewController(vc, animated: true)
         }
         
-        accountsSection.append(cuttentAccountRow)
+        accountsSection.append(multiAccountRow)
 		form.append(accountsSection)
 		
 		// MARK: Notifications

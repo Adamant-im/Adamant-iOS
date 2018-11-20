@@ -268,6 +268,20 @@ extension AdamantAccountService {
         }
     }
     
+    func getAllUnreaded() -> Int {
+        return securedStore.getAllUnreaded()
+    }
+    
+    func setUnreadedChats(_ value: Int) {
+        guard let address = self.account?.address, var account = securedStore.getAccount(by: address) else {
+            print("Fail to save unreaded for current account")
+            return
+        }
+        
+        account.chatProvider.notifiedCount = value
+        securedStore.updateAccount(account)
+    }
+    
     /// Extract Adamant address from a public key
     func getAddress(from publicKey: String) -> String {
         let bytes = SHA256(publicKey.hexBytes()).digest()
@@ -710,6 +724,15 @@ public struct LocalAdamantAccount: Codable, Equatable {
         }
         return nil
     }
+    
+    func getUnreaded() -> Int {
+        var unreaded = 0
+        
+        unreaded += chatProvider.notifiedCount ?? 0
+        unreaded += transfersProvider.notifiedCount ?? 0
+        
+        return unreaded
+    }
 }
 
 public struct NonificationProviderStorage: Codable, Equatable {
@@ -820,6 +843,14 @@ extension SecuredStore {
             accounts[account.address] = account
             _ = self.saveAdditionalAccounts(accounts)
         }
+    }
+    
+    func getAllUnreaded() -> Int {
+        var unReaded = 0
+        for account in getAccounts().values {
+            unReaded += account.getUnreaded()
+        }
+        return unReaded
     }
     
     // MARK: Address pool methods

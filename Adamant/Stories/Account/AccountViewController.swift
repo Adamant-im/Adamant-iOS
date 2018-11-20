@@ -30,6 +30,7 @@ extension String.adamantLocalized {
 extension String.adamantLocalized.alert {
 	static let logoutMessageFormat = NSLocalizedString("AccountTab.ConfirmLogout.MessageFormat", comment: "Account tab: Confirm logout alert")
 	static let logoutButton = NSLocalizedString("AccountTab.ConfirmLogout.Logout", comment: "Account tab: Confirm logout alert: Logout (Ok) button")
+    static let logoutAllButton = NSLocalizedString("AccountTab.ConfirmLogout.LogoutAll", comment: "Account tab: Confirm logout alert: 'Logout all counts' button")
 }
 
 // MARK: AccountViewController
@@ -277,6 +278,9 @@ class AccountViewController: FormViewController {
 				return
 			}
 			
+            let isMain = self?.accountService.getMainAccount()?.address == address
+            let isMultiAccount = self?.accountService.getAdditionalAccounts().count ?? 0 > 0
+            
 			let alert = UIAlertController(title: String.localizedStringWithFormat(String.adamantLocalized.alert.logoutMessageFormat, address), message: nil, preferredStyle: .alert)
 			let cancel = UIAlertAction(title: String.adamantLocalized.alert.cancel, style: .cancel) { _ in
 				guard let indexPath = row.indexPath else {
@@ -285,15 +289,36 @@ class AccountViewController: FormViewController {
 				
 				self?.tableView.deselectRow(at: indexPath, animated: true)
 			}
-			let logout = UIAlertAction(title: String.adamantLocalized.alert.logoutButton, style: .default) { [weak self] _ in
-				self?.accountService.logout()
-				if let vc = self?.router.get(scene: AdamantScene.Login.login) {
-					self?.dialogService.present(vc, animated: true, completion: nil)
-				}
-			}
-			
-			alert.addAction(cancel)
-			alert.addAction(logout)
+            
+            if !isMain, isMultiAccount {
+                let logout = UIAlertAction(title: String.adamantLocalized.alert.logoutButton, style: .default) { [weak self] _ in
+                    self?.accountService.removeAdditionalAccounts(address: address, completion: { (result) in
+                        //
+                    })
+                }
+                
+                let logoutAll = UIAlertAction(title: String.adamantLocalized.alert.logoutAllButton, style: .destructive) { [weak self] _ in
+                    self?.accountService.logout()
+                    if let vc = self?.router.get(scene: AdamantScene.Login.login) {
+                        self?.dialogService.present(vc, animated: true, completion: nil)
+                    }
+                }
+                
+                alert.addAction(logout)
+                alert.addAction(logoutAll)
+                alert.addAction(cancel)
+            } else {
+                let logout = UIAlertAction(title: String.adamantLocalized.alert.logoutButton, style: .default) { [weak self] _ in
+                    self?.accountService.logout()
+                    if let vc = self?.router.get(scene: AdamantScene.Login.login) {
+                        self?.dialogService.present(vc, animated: true, completion: nil)
+                    }
+                }
+                
+                alert.addAction(cancel)
+                alert.addAction(logout)
+            }
+            
 			self?.present(alert, animated: true, completion: nil)
 		})
 		
@@ -347,6 +372,13 @@ class AccountViewController: FormViewController {
         for vc in pagingViewController.pageViewController.children {
 			vc.viewWillAppear(animated)
 		}
+        
+        if accountService.hasStayInAccount {
+            accountHeaderView.accountSwitchButton.isHidden = false
+            accountHeaderView.setAccountsBadge(accountService.getAllUnreaded())
+        } else {
+            accountHeaderView.accountSwitchButton.isHidden = true
+        }
 	}
 	
 	override func viewWillDisappear(_ animated: Bool) {
@@ -405,6 +437,16 @@ class AccountViewController: FormViewController {
 
 // MARK: - AccountHeaderViewDelegate
 extension AccountViewController: AccountHeaderViewDelegate {
+    func accountSwitchTapped() {
+        guard let nav = self.navigationController else {
+            return
+        }
+        
+        let vc = self.router.get(scene: AdamantScene.Settings.multiAccount)
+        
+        nav.pushViewController(vc, animated: true)
+    }
+    
 	func addressLabelTapped() {
 		guard let address = accountService.account?.address else {
 			return

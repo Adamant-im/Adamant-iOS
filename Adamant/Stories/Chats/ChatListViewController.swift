@@ -160,7 +160,11 @@ class ChatListViewController: UIViewController {
 		}
 		
 		tableView.reloadData()
-		setBadgeValue(unreadController?.fetchedObjects?.count)
+        
+        let unreaded = unreadController?.fetchedObjects?.count ?? 0
+        
+        accountService.setUnreadedChats(unreaded)
+		setBadgeValue(unreaded)
 	}
     
     @objc private func handleRefresh(_ refreshControl: UIRefreshControl) {
@@ -296,7 +300,10 @@ extension ChatListViewController: NSFetchedResultsControllerDelegate {
 			tableView.endUpdates()
 			
 		case let c where c == unreadController:
-			setBadgeValue(controller.fetchedObjects?.count)
+            let unreaded = unreadController?.fetchedObjects?.count ?? 0
+            
+            accountService.setUnreadedChats(unreaded)
+            setBadgeValue(unreaded)
 			
 		default:
 			break
@@ -605,11 +612,12 @@ extension ChatListViewController {
 		
 		if let value = value, value > 0 {
 			item.badgeValue = String(value)
-			notificationsService.setBadge(number: value)
 		} else {
 			item.badgeValue = nil
-			notificationsService.setBadge(number: nil)
 		}
+        
+        let total = accountService.getAllUnreaded()
+        notificationsService.setBadge(number: total)
 	}
 	
 	/// Current chat

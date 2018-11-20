@@ -188,17 +188,12 @@ extension AdamantNotificationsService {
         content.body = body
         content.sound = UNNotificationSound(named: UNNotificationSoundName("notification.mp3"))
         
-        if let number = type.badge {
-            if Thread.isMainThread {
-                content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
-            } else {
-                DispatchQueue.main.sync {
-                    content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + backgroundNotifications + number)
-                }
-            }
-            
-            if isBackgroundSession {
-                backgroundNotifications += number
+        let number = securedStore.getAllUnreaded()
+        if Thread.isMainThread {
+            content.badge = NSNumber(value: number)
+        } else {
+            DispatchQueue.main.sync {
+                content.badge = NSNumber(value: number)
             }
         }
         
@@ -226,7 +221,7 @@ extension AdamantNotificationsService {
 		
 		let appIconBadgeNumber: Int
 		
-		if let number = number {
+		if let number = number, number > 0 {
 			customBadgeNumber = number
 			appIconBadgeNumber = number
 			securedStore.set(String(number), for: StoreKey.notificationsService.customBadgeNumber)

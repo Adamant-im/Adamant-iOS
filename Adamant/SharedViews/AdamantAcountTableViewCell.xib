@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -37,10 +37,31 @@
                             <constraint firstAttribute="width" secondItem="bqQ-nr-qGY" secondAttribute="height" multiplier="1:1" id="wTt-dA-uqU"/>
                         </constraints>
                     </imageView>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jiX-vd-lut">
+                        <rect key="frame" x="4" y="4" width="38" height="19.5"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="999" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Bg5-tL-zj9">
+                                <rect key="frame" x="4" y="0.0" width="30" height="19.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" secondItem="Bg5-tL-zj9" secondAttribute="height" id="DMo-nQ-On4"/>
+                            <constraint firstItem="Bg5-tL-zj9" firstAttribute="top" secondItem="jiX-vd-lut" secondAttribute="top" id="JyF-wR-7X7"/>
+                            <constraint firstAttribute="trailing" secondItem="Bg5-tL-zj9" secondAttribute="trailing" constant="4" id="gxm-Pj-QH7"/>
+                            <constraint firstItem="Bg5-tL-zj9" firstAttribute="leading" secondItem="jiX-vd-lut" secondAttribute="leading" constant="4" id="ikH-dR-uQ5"/>
+                            <constraint firstAttribute="bottom" secondItem="Bg5-tL-zj9" secondAttribute="bottom" id="vTh-H9-1LU"/>
+                        </constraints>
+                    </view>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="jiX-vd-lut" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="4" id="1Tb-YI-zsa"/>
                     <constraint firstAttribute="bottom" secondItem="SOz-y9-aXg" secondAttribute="bottom" constant="8" id="32A-uk-ef8"/>
                     <constraint firstItem="bqQ-nr-qGY" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="8" id="8ek-ra-ECu"/>
+                    <constraint firstItem="jiX-vd-lut" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="4" id="J8v-gg-aY0"/>
                     <constraint firstAttribute="bottom" secondItem="bqQ-nr-qGY" secondAttribute="bottom" constant="8" id="JuQ-e5-JT0"/>
                     <constraint firstItem="bqQ-nr-qGY" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="KcZ-8r-kzc"/>
                     <constraint firstItem="SOz-y9-aXg" firstAttribute="leading" secondItem="KTv-Ea-BC2" secondAttribute="leading" id="bcH-G1-04B"/>
@@ -51,6 +72,8 @@
             <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
             <connections>
                 <outlet property="avatarImageView" destination="bqQ-nr-qGY" id="1FS-cw-sbv"/>
+                <outlet property="badgeLabel" destination="Bg5-tL-zj9" id="TA8-n6-yqU"/>
+                <outlet property="badgeView" destination="jiX-vd-lut" id="38D-R4-ArI"/>
                 <outlet property="detailsLabel" destination="SOz-y9-aXg" id="oz5-Xh-lCe"/>
                 <outlet property="titleLabel" destination="KTv-Ea-BC2" id="VrP-eA-p9G"/>
             </connections>

@@ -112,6 +112,9 @@
 /* Account tab: 'Logout' button */
 "AccountTab.Row.Logout" = "Ausloggen";
 
+/* "Account tab: Confirm logout alert: 'Logout all counts' button" */
+"AccountTab.ConfirmLogout.LogoutAll" = "Vollständige Ausloggen";
+
 /* Account tab: 'Security' row */
 "AccountTab.Row.Security" = "Sicherheit";
 
