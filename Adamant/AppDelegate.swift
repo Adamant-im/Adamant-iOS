@@ -86,6 +86,9 @@ struct AdamantResources {
     // MARK: LSK
     static let liskExplorerAddress = "https://explorer.lisk.io/tx/"
 //    static let liskExplorerAddress = "https://testnet-explorer.lisk.io/tx/" // LISK Testnet
+    
+    // MARK: BTC
+    static let bitcoinExplorerAddress = "https://www.blockchain.com/btc/tx/"
 	
 	private init() {}
 }

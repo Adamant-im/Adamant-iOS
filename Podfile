@@ -33,7 +33,8 @@ target 'Adamant' do
   pod 'libsodium' # Sodium crypto library
   pod 'web3swift' # ETH Web3 Swift Port
   pod 'Lisk', :git => 'https://github.com/adamant-im/lisk-swift.git' # LSK
-  
+  pod 'BitcoinKit', :git => 'https://github.com/boyarkin-anton/BitcoinKit.git', :branch => 'dev' # BTC
+
   # Utility
   pod 'ByteBackpacker' # Utility to pack value types into a Byte array
 

@@ -2,6 +2,11 @@ PODS:
   - Alamofire (4.8.0)
   - BigInt (3.1.0):
     - SipHash (~> 1.2)
+  - BitcoinKit (1.0.2):
+    - GRDB.swift (~> 3.6.2)
+    - GRDBCipher (~> 3.6.2)
+    - GRKOpenSSLFramework (~> 1.0.2.15)
+    - secp256k1_swift (~> 1.0.3)
   - ByteBackpacker (1.2.1)
   - CryptoSwift (0.12.0)
   - DateToolsSwift (4.0.0)
@@ -16,6 +21,10 @@ PODS:
   - FTIndicator/FTNotificationIndicator (1.2.9)
   - FTIndicator/FTProgressIndicator (1.2.9)
   - FTIndicator/FTToastIndicator (1.2.9)
+  - GRDB.swift (3.6.2)
+  - GRDBCipher (3.6.2):
+    - SQLCipher (~> 3.4.1)
+  - GRKOpenSSLFramework (1.0.2.16)
   - Haring (2.1)
   - KeychainAccess (3.1.2)
   - KZFileWatchers (1.0.5)
@@ -49,6 +58,11 @@ PODS:
     - CryptoSwift (~> 0.11)
   - secp256k1_swift (1.0.3)
   - SipHash (1.2.2)
+  - SQLCipher (3.4.2):
+    - SQLCipher/standard (= 3.4.2)
+  - SQLCipher/common (3.4.2)
+  - SQLCipher/standard (3.4.2):
+    - SQLCipher/common
   - Stylist (0.2.1):
     - KZFileWatchers (~> 1.0.5)
     - Yams (~> 1.0.0)
@@ -69,6 +83,7 @@ PODS:
 
 DEPENDENCIES:
   - Alamofire
+  - BitcoinKit (from `https://github.com/boyarkin-anton/BitcoinKit.git`, branch `dev`)
   - ByteBackpacker
   - CryptoSwift
   - DateToolsSwift
@@ -104,6 +119,9 @@ SPEC REPOS:
     - Eureka
     - FreakingSimpleRoundImageView
     - FTIndicator
+    - GRDB.swift
+    - GRDBCipher
+    - GRKOpenSSLFramework
     - Haring
     - KeychainAccess
     - KZFileWatchers
@@ -122,6 +140,7 @@ SPEC REPOS:
     - scrypt
     - secp256k1_swift
     - SipHash
+    - SQLCipher
     - Stylist
     - swift_qrcodejs
     - SwiftRLP
@@ -130,6 +149,9 @@ SPEC REPOS:
     - Yams
 
 EXTERNAL SOURCES:
+  BitcoinKit:
+    :branch: dev
+    :git: https://github.com/boyarkin-anton/BitcoinKit.git
   Lisk:
     :git: https://github.com/adamant-im/lisk-swift.git
   SwiftyOnboard:
@@ -137,6 +159,9 @@ EXTERNAL SOURCES:
     :git: https://github.com/RealBonus/SwiftyOnboard
 
 CHECKOUT OPTIONS:
+  BitcoinKit:
+    :commit: 4c0ba2fce414436e2288a354411675a12c2866dc
+    :git: https://github.com/boyarkin-anton/BitcoinKit.git
   Lisk:
     :commit: 154a3af05772136b776ff14ae05f92c8d844ea20
     :git: https://github.com/adamant-im/lisk-swift.git
@@ -147,6 +172,7 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   Alamofire: 3ec537f71edc9804815215393ae2b1a8ea33a844
   BigInt: 76b5dfdfa3e2e478d4ffdf161aeede5502e2742f
+  BitcoinKit: af68da8b2c9a23bc355c711fdc6bbd0abc8cc447
   ByteBackpacker: df001da117faacdbf09b69a116ec480f6651c9ec
   CryptoSwift: 1c07ca50843dd48bc54e6ea53d7a4dba3b645716
   DateToolsSwift: 875d97ff9e3a5d54abdd67a269b3f51c757b71ab
@@ -154,6 +180,9 @@ SPEC CHECKSUMS:
   Eureka: 28ea296f06710f6745266b71f17862048941a32d
   FreakingSimpleRoundImageView: 0d687cb05da8684e85c4c2ae9945bafcbe89d2a2
   FTIndicator: f7f071fd159e5befa1d040a9ef2e3ab53fa9322c
+  GRDB.swift: e10787d857b6b8135354b9e08fb23b4bb8e2fab7
+  GRDBCipher: caccb02f13acd7f745e595cf84a70be3e91fb5f3
+  GRKOpenSSLFramework: 35944e317e6336b2944ad70b059d84db6b2d8532
   Haring: b3a8495c073a016f03296d67debc609a7ecf7710
   KeychainAccess: b3816fddcf28aa29d94b10ec305cd52be14c472b
   KZFileWatchers: cdb033e4120fbe61c8e0f4df3613d5894741653d
@@ -173,6 +202,7 @@ SPEC CHECKSUMS:
   scrypt: 3fe5b1a3b0976f97cd87488673a8f7c65708cc84
   secp256k1_swift: 4fc5c4b2d2c6d21ee8ccb868cdc92da12f38bed9
   SipHash: fad90a4683e420c52ef28063063dbbce248ea6d4
+  SQLCipher: f9fcf29b2e59ced7defc2a2bdd0ebe79b40d4990
   Stylist: 62917294a7b21ef61735a7067c3e9232d14ceb6f
   swift_qrcodejs: c181fe5c849d30c699546a23762d7e3dd143ab37
   SwiftRLP: 98a02b2210128353ca02e4c2f4d83e2a9796db4f
@@ -181,6 +211,6 @@ SPEC CHECKSUMS:
   web3swift: d80d1b9a3feca16e614acec9eea47ec26310d37d
   Yams: 572f625a8b719b73e0b57fd313c680f3e2161fe9
 
-PODFILE CHECKSUM: bca4bad85b3c921d691ed32e78fb34ad530f997f
+PODFILE CHECKSUM: 378abf25974f82bedf445bb836328c373ef39582
 
-COCOAPODS: 1.6.0.beta.2
+COCOAPODS: 1.6.1

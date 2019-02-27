@@ -127,8 +127,11 @@
 /* Account tab: 'Send ETH tokens' button */
 "AccountTab.Row.SendEth" = "Отправить ETH";
 
-/* Account tab: 'Send ETH tokens' button */
+/* Account tab: 'Send LSK tokens' button */
 "AccountTab.Row.SendLsk" = "Отправить LSK";
+
+/* Account tab: 'Send BTC tokens' button */
+"AccountTab.Row.SendBtc" = "Отправить BTC";
 
 /* Account tab: Anonymously buy ADM tokens */
 "AccountTab.Row.AnonymouslyBuyADM" = "Купить ADM анонимно";
@@ -168,6 +171,9 @@
 
 /* Account tab: Lisk wallet */
 "AccountTab.Wallets.lisk_wallet" = "Кошелек Lisk";
+
+/* Account tab: Bitcoin wallet */
+"AccountTab.Wallets.bitcoin_wallet" = "Кошелек Bitcoin";
 
 /* Account tab: Delegates section title */
 "AccountTab.Section.Delegates" = "Делегаты";

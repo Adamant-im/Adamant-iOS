@@ -127,8 +127,11 @@
 /* Account tab: 'Send ETH tokens' button */
 "AccountTab.Row.SendEth" = "Send ETH";
 
-/* Account tab: 'Send ETH tokens' button */
+/* Account tab: 'Send LSK tokens' button */
 "AccountTab.Row.SendLsk" = "Send LSK";
+
+/* Account tab: 'Send BTC tokens' button */
+"AccountTab.Row.SendBtc" = "Send BTC";
 
 /* Account tab: Anonymously buy ADM tokens */
 "AccountTab.Row.AnonymouslyBuyADM" = "Buy ADM anonymously";
@@ -168,6 +171,9 @@
 
 /* Account tab: Lisk wallet */
 "AccountTab.Wallets.lisk_wallet" = "Lisk Wallet";
+
+/* Account tab: Bitcoin wallet */
+"AccountTab.Wallets.bitcoin_wallet" = "Bitcoin Wallet";
 
 /* Account page: scene title */
 "AccountTab.Title" = "Account";
